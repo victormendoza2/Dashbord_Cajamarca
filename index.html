@@ -32,7 +32,7 @@ svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;borde
 <select id="se"></select><select id="sk"></select><select id="bm"><option value="">Sin mapa base</option><option value="osm">Base: OpenStreetMap</option><option value="sat">Base: Google Satélite</option></select><button class="b rs" id="rs">✕ Limpiar selección</button></div>
 
 <section id="a"><div class="grid">
-<div class="card"><h2 id="mt"></h2><div class="row" style="margin:0 0 6px"><button class="b" id="zi">＋</button><button class="b" id="zo">－</button><button class="b" id="zh">⌂ Ajustar</button></div><svg id="map" viewBox="0 0 600 520" width="100%" style="max-height:560px"></svg>
+<div class="card"><h2 id="mt"></h2><div class="row" style="margin:0 0 6px"><button class="b" id="zi">＋</button><button class="b" id="zo">－</button><button class="b" id="zh">⌂ Ajustar</button><label class="mu">Tamaño de punto <input type="range" id="ps" min="1" max="8" value="3"></label></div><div class="row" id="flt" style="margin:0 0 6px"></div><svg id="map" viewBox="0 0 600 520" width="100%" style="max-height:560px"></svg>
 <div class="lg" id="lgd"></div><small class="mu">Mapas base: se ven al abrir este archivo en tu PC o servidor (la vista previa de Claude bloquea teselas externas). Rueda = zoom, arrastrar = mover.</small></div>
 <div><div class="card"><h2>Elementos expuestos (todas las capas analizadas)</h2><div class="kpis" id="kp"></div><div class="ov"><table id="tb"></table></div><small class="mu">Clic en una capa para abrir su tabla y ubicar elementos en el mapa.</small></div></div>
 </div>
@@ -42,15 +42,7 @@ svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;borde
 <section id="b" class="hide"><div class="card"><h2 id="eh">Prioridad de intervención inmediata</h2><div class="ov" style="max-height:none"><table id="ex"></table></div></div></section>
 
 <section id="c" class="hide">
-<div class="card"><h2>Cómo cargar datos (3 pasos)</h2>
-<p><span class="st">PASO 1 · Descargar</span> el dato oficial (en tu PC):</p>
-<div class="row"><a class="b" target="_blank" rel="noopener" href="https://www.senamhi.gob.pe/?&p=aviso-24H">SENAMHI · Aviso 24 h (ZIP)</a><a class="b" target="_blank" rel="noopener" href="https://www.senamhi.gob.pe/?&p=aviso-activacion-quebrada">SENAMHI · Activación de quebrada (ZIP)</a></div>
-<div class="row"><input type="text" id="u1" placeholder="Enlace CENEPRED (opcional, solo referencia)"><input type="text" id="u2" placeholder="Otro enlace (opcional)"><button class="b" id="us">Guardar</button></div><div id="ul" class="mu"></div>
-<p><span class="st">PASO 2 · Procesar</span> <a class="b" href="procesador.html" target="_blank" rel="noopener">🛠 Abrir procesador de capas</a><br>Limpia, recorta y convierte SENAMHI (ZIP/shapefile) y GeoJSON sin instalar nada. <small class="mu">Opción avanzada para GDB/GPKG pesados, con Python:</small></p>
-<pre>python etl_capas.py --fuente aviso_24h.zip --limites distrito.gpkg --dep CAJAMARCA --salida capas/senamhi_24h
-python etl_capas.py --fuente CENEPRED.gdb --limites distrito.gpkg --dep CAJAMARCA --salida capas/cenepred --capas suscep_mm</pre>
-<small class="mu">¿No sabes qué capas trae el GDB? Ejecuta primero: <code>python etl_capas.py --fuente CENEPRED.gdb --listar</code></small>
-<p><span class="st">PASO 3 · Cargar</span> el GeoJSON generado en el botón que corresponde (así el dashboard sabe qué es cada capa):</p>
+<div class="card"><h2>Cargar capas</h2><p class="mu">Sube los GeoJSON que preparaste en QGIS. Cada botón indica qué tipo de capa es. Puedes subir tantas capas de elementos expuestos como necesites y, en la tabla de abajo, elegir qué campo se usa como <b>etiqueta</b> de cada una.</p>
 <div class="ld">
 <button class="b" data-ld data-role="limite">① Límites distritales</button>
 <button class="b" data-ld data-role="riesgo" data-ent="CENEPRED" data-comp="Movimiento en masa">CENEPRED · Mov. en masa</button>
@@ -61,11 +53,11 @@ python etl_capas.py --fuente CENEPRED.gdb --limites distrito.gpkg --dep CAJAMARC
 <input type="file" id="fx" multiple accept=".geojson,.json" class="hide"><input type="file" id="fd" webkitdirectory class="hide">
 <div class="row" style="margin-top:10px"><button class="b" id="fdb">📁 Cargar carpeta completa de elementos expuestos (GORE)</button><span id="ms" class="mu"></span></div>
 <p class="mu">Elementos expuestos: colegios, salud, vías, parcelas… en GeoJSON. Puedes subir los que quieras: el análisis usa todas las capas cargadas.</p></div>
-<div class="card"><h2>Capas cargadas</h2><div class="ov"><table id="lt"></table></div><div class="row"><button class="b" id="dm">Restaurar demo</button><button class="b rs" id="cl">Quitar todas</button></div></div></section>
+<div class="card"><h2>Capas cargadas</h2><div class="ov"><table id="lt"></table></div><div class="row"><button class="b" id="rg">Restaurar guardadas</button><button class="b" id="dm">Restaurar demo</button><button class="b rs" id="cl">Quitar todas</button></div></div></section>
 </main>
 <script>
 const SCS={C:{L:["","Muy bajo","Bajo","Medio","Alto","Muy alto"],C:["","#a1d99b","#238b45","#ffff00","#ff9800","#f44336"]},S:{L:["","Nivel 1","Nivel 2","Nivel 3","Nivel 4"],C:["","#ffffff","#ffff00","#ffa500","#ff0000"]}},$=i=>document.getElementById(i);let LV=SCS.S.L,CO=SCS.S.C,N=4,RG=[1,2,3,4],V=null,keep=false,lastIt=[],lastSc=[];const TW=256,mx=l=>(l+180)/360,my=a=>{const r=a*Math.PI/180;return(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2};
-function setScale(){const R=layers.find(l=>l.name==scn&&l.role=="riesgo"),g=R&&key(R.fc.features[0].properties,/gridcode/i),c=g?SCS.C:SCS.S;LV=c.L;CO=c.C;N=LV.length-1;RG=[...Array(N).keys()].map(i=>i+1)}
+function setScale(){const R=layers.find(l=>l.name==scn&&l.role=="riesgo"),g=R&&key(R.fc.features[0].properties,/gridcode/i),c=g?SCS.C:SCS.S;LV=c.L;CO=c.C;N=LV.length-1;RG=[...Array(N).keys()].map(i=>i+1);if(N!=lastN){hideLv=new Set();lastN=N}}
 const guess=(n,p)=>{const g=key(p,/gridcode/i),[ent,comp]=/inund/i.test(n)?["CENEPRED","Inundaciones"]:/mm|movim|masa|remoc/i.test(n)?["CENEPRED","Movimiento en masa"]:/24/.test(n)?["SENAMHI","Aviso 24 h"]:/quebrada|activ/i.test(n)?["SENAMHI","Activación de quebrada"]:g?["CENEPRED","Otro escenario"]:/senamhi|aviso/i.test(n)?["SENAMHI","Otro aviso"]:["Otras","Escenario"];return{ent,comp}};
 let layers=[],B=[],S=null,sel={d:"",p:"",s:""},scn="",open=null,hl=null,cache={},src={};
 try{src=JSON.parse(localStorage.getItem("src")||"{}")}catch(e){}
@@ -77,15 +69,25 @@ function bb(f){if(f._b)return f._b;const c=flat(f.geometry);let a=1e9,b=1e9,x=-1
 function rep(g){const c=flat(g);if(g.type.includes("Point"))return c[0];if(g.type.includes("Line"))return c[c.length>>1];const n=c.length;return[c.reduce((a,p)=>a+p[0],0)/n,c.reduce((a,p)=>a+p[1],0)/n]}
 function ring(p,r){let i=false;for(let a=0,b=r.length-1;a<r.length;b=a++)if((r[a][1]>p[1])!=(r[b][1]>p[1])&&p[0]<(r[b][0]-r[a][0])*(p[1]-r[a][1])/(r[b][1]-r[a][1])+r[a][0])i=!i;return i}
 const inF=(p,f)=>{const b=bb(f);if(p[0]<b[0]||p[0]>b[2]||p[1]<b[1]||p[1]>b[3])return false;return polys(f.geometry).some(q=>ring(p,q[0])&&!q.slice(1).some(h=>ring(p,h)))};
+const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])),defLab=p=>{const k=Object.keys(p||{});return k.find(x=>/nom|name|denom|cen_edu|insti|razon/i.test(x))||k.find(x=>typeof p[x]=="string")||k[0]||""};
+const nmL=(l,f)=>{const v=l.lab&&f.properties?f.properties[l.lab]:null;return v!=null&&v!==""?v:nm(f.properties)};
 const nm=p=>{const k=key(p,/^(nombre|name|nom_|cen_edu|nom)/i);return k?p[k]:Object.values(p||{}).find(v=>typeof v=="string")||"s/n"};
+let hideLv=new Set(),hideL=new Set(),psz=3,lastN=0;
+const DB=()=>new Promise((ok,ko)=>{const r=indexedDB.open("riesgos",1);r.onupgradeneeded=()=>r.result.createObjectStore("l",{keyPath:"id"});r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)});
+const dbDo=async(m,f)=>{try{const d=await DB();return await new Promise((ok,ko)=>{const t=d.transaction("l",m),q=f(t.objectStore("l"));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>ko(t.error)})}catch(e){return null}};
+const dbPut=l=>dbDo("readwrite",o=>o.put({id:l.id,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,fc:l.fc})),dbDel=id=>dbDo("readwrite",o=>o.delete(id)),dbClear=()=>dbDo("readwrite",o=>o.clear()),dbAll=async()=>(await dbDo("readonly",o=>o.getAll()))||[];
+function gridOf(R){if(R._g)return R._g;const F=R.fc.features,e=F.map(bb);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;e.forEach(b=>{if(b[0]<x0)x0=b[0];if(b[1]<y0)y0=b[1];if(b[2]>x1)x1=b[2];if(b[3]>y1)y1=b[3]});
+ const n=Math.max(1,Math.min(256,Math.ceil(Math.sqrt(F.length/4)))),cw=(x1-x0)/n||1,ch=(y1-y0)/n||1,c=new Map();
+ e.forEach((b,i)=>{const a=Math.floor((b[0]-x0)/cw),z=Math.min(n-1,Math.floor((b[2]-x0)/cw)),d=Math.floor((b[1]-y0)/ch),y=Math.min(n-1,Math.floor((b[3]-y0)/ch));for(let p=a;p<=z;p++)for(let q=d;q<=y;q++){const k=p*n+q;(c.get(k)||c.set(k,[]).get(k)).push(i)}});return R._g={x0,y0,cw,ch,n,c,F}}
+function lvAt(R,k,pt){const g=gridOf(R);let a=Math.floor((pt[0]-g.x0)/g.cw),d=Math.floor((pt[1]-g.y0)/g.ch);if(a<0||d<0||a>g.n||d>g.n)return 0;a=Math.min(a,g.n-1);d=Math.min(d,g.n-1);let lv=0;for(const i of g.c.get(a*g.n+d)||[]){const q=g.F[i];if(inF(pt,q))lv=Math.max(lv,lvl(q.properties[k]))}return lv}
 function addLayer(name,fc,demo){const fs=(fc.features||[]).filter(f=>f.geometry);if(!fs.length)return;const p=fs[0].properties||{},poly=/Polygon/.test(fs[0].geometry.type);
- const role=poly&&key(p,/^(distri|nombdist)/i)?"limite":poly&&key(p,/gridcode|niv|riesg|peligro|grado/i)?"riesgo":"expuesto";layers.push({name,fc:{features:fs},role,demo,...guess(name,p)})}
+ const role=poly&&key(p,/^(distri|nombdist)/i)?"limite":poly&&key(p,/gridcode|niv|riesg|peligro|grado/i)?"riesgo":"expuesto";layers.push({name,fc:{features:fs},role,demo,lab:defLab(p),...guess(name,p)})}
 function build(){B=[];layers.filter(l=>l.role=="limite").forEach(l=>l.fc.features.forEach(f=>{const p=f.properties;B.push({f,dep:p[key(p,/^(depart|nombdep)/i)]||"",pro:p[key(p,/^(provin|nombprov)/i)]||"",dis:p[key(p,/^(distri|nombdist)/i)]||""})}));
  const r=layers.filter(l=>l.role=="riesgo");if(!r.find(l=>l.name==scn))scn=r[0]?r[0].name:"";cache={};sel={d:"",p:"",s:""};open=null;hl=null;V=null;render()}
 const unitOf=p=>B.find(u=>inF(p,u.f));
 function analyze(){if(cache[scn])return cache[scn];const R=layers.find(l=>l.name==scn&&l.role=="riesgo"),k=R&&key(R.fc.features[0].properties,/gridcode|niv|riesg|peligro|grado/i),out=[];
  layers.filter(l=>l.role=="expuesto").forEach(l=>l.fc.features.forEach(f=>{const pt=rep(f.geometry);if(!pt)return;const u=B.length?unitOf(pt):{dep:"",pro:"",dis:""};if(!u)return;let lv=0;
-  if(R)for(const q of R.fc.features)if(inF(pt,q))lv=Math.max(lv,lvl(q.properties[k]));out.push({l:l.name,f,pt,nm:nm(f.properties),dep:u.dep,pro:u.pro,dis:u.dis,lv})}));return cache[scn]=out}
+  if(R)lv=lvAt(R,k,pt);out.push({l:l.name,f,pt,nm:nmL(l,f),dep:u.dep,pro:u.pro,dis:u.dis,lv})}));return cache[scn]=out}
 const inS=u=>(!sel.d||u.dep==sel.d)&&(!sel.p||u.pro==sel.p)&&(!sel.s||u.dis==sel.s);
 const uniq=a=>[...new Set(a)].sort();
 function opts(el,ph,arr,v){el.innerHTML=`<option value="">${ph}</option>`+arr.map(x=>`<option ${x==v?"selected":""}>${x}</option>`).join("")}
@@ -101,14 +103,17 @@ function render(){setScale();const has=B.length>0;
  const ex=uniq(it.map(i=>i.l)),cnt=l=>RG.map(v=>it.filter(i=>i.l==l&&i.lv==v).length);
  $("kp").innerHTML=[["Elementos analizados",it.length],[LV[N],it.filter(i=>i.lv==N).length],[LV[N-1],it.filter(i=>i.lv==N-1).length]].map(k=>`<div class="k"><small>${k[0]}</small><b>${k[1].toLocaleString()}</b></div>`).join("");
  $("tb").innerHTML="<tr><th>Capa</th>"+RG.map(v=>`<th style="color:${CO[v]}">${LV[v]}</th>`).join("")+"<th>Total</th></tr>"+(ex.map(l=>`<tr class="cl" data-l="${l}"><td>▸ ${l}</td>${cnt(l).map(c=>`<td>${c}</td>`).join("")}<td>${it.filter(i=>i.l==l).length}</td></tr>`).join("")||"<tr><td>Sin capas de elementos expuestos</td></tr>");
- $("tb").querySelectorAll("tr.cl").forEach(r=>r.onclick=()=>{open=r.dataset.l;detail(it)});detail(it);exec(it,scope)}
+ $("tb").querySelectorAll("tr.cl").forEach(r=>r.onclick=()=>{open=r.dataset.l;detail(it)});flt(it);detail(it);exec(it,scope)}
+function flt(it){const ls=uniq(it.map(i=>i.l));
+ $("flt").innerHTML='<small class="mu">Mostrar:</small>'+[...RG].reverse().concat(0).map(v=>`<label style="font-size:12px"><input type="checkbox" data-v="${v}" ${hideLv.has(v)?"":"checked"}> <i style="display:inline-block;width:10px;height:10px;background:${CO[v]||"#9aa5b1"};border:1px solid #999"></i>${LV[v]||"Sin dato"}</label>`).join(" ")+(ls.length>1?" | "+ls.map(l=>`<label style="font-size:12px"><input type="checkbox" data-l="${l}" ${hideL.has(l)?"":"checked"}> ${l}</label>`).join(" "):"");
+ $("flt").querySelectorAll("input").forEach(c=>c.onchange=()=>{const S=c.dataset.v!=null?hideLv:hideL,k=c.dataset.v!=null?+c.dataset.v:c.dataset.l;c.checked?S.delete(k):S.add(k);drawMap(lastIt,lastSc,false)})}
 function detail(it){$("dt").classList.toggle("hide",!open);if(!open)return;$("dh").textContent="Detalle: "+open;
  const f=$("df");f.innerHTML='<option value="0">Todos los niveles</option>'+[...RG].reverse().map(v=>`<option value="${v}" ${f.dataset.v==v?"selected":""}>${LV[v]}</option>`).join("");f.onchange=()=>{f.dataset.v=f.value;detail(it)};
  const rows=it.filter(i=>i.l==open&&(!+f.dataset.v||i.lv==+f.dataset.v)).sort((a,b)=>b.lv-a.lv).slice(0,300);
- $("dtb").innerHTML="<tr><th>Nombre</th><th>Provincia</th><th>Distrito</th><th>Nivel</th><th></th></tr>"+rows.map((r,i)=>`<tr><td>${r.nm}</td><td>${r.pro}</td><td>${r.dis}</td><td><span class="pill" style="background:${CO[r.lv]||"#888"}">${LV[r.lv]||"Sin riesgo"}</span></td><td><button class="b" data-i="${i}">📍 Ubicar</button></td></tr>`).join("");
+ $("dtb").innerHTML="<tr><th>Nombre</th><th>Provincia</th><th>Distrito</th><th>Nivel</th><th></th></tr>"+rows.map((r,i)=>`<tr><td>${esc(r.nm)}</td><td>${r.pro}</td><td>${r.dis}</td><td><span class="pill" style="background:${CO[r.lv]||"#888"}">${LV[r.lv]||"Sin riesgo"}</span></td><td><button class="b" data-i="${i}">📍 Ubicar</button></td></tr>`).join("");
  $("dtb").querySelectorAll("button").forEach(b=>b.onclick=()=>{hl=rows[b.dataset.i];V={cx:mx(hl.pt[0]),cy:my(hl.pt[1]),z:14};keep=true;render();$("map").scrollIntoView({behavior:"smooth",block:"center"})})}
 let tf={x:0,y:0,k:1};
-function drawMap(it,scope,rf){const W=600,H=520;tf={x:0,y:0,k:1};
+function drawMap(it,scope,rf){const W=600,H=520;it=it.filter(i=>!hideLv.has(i.lv)&&!hideL.has(i.l));tf={x:0,y:0,k:1};
  if(rf||!V){const ext=scope.length?scope.map(u=>bb(u.f)):(layers.length?layers.flatMap(l=>l.fc.features.slice(0,2000)).map(bb):[[-79,-7,-78,-6]]),
   a=Math.min(...ext.map(e=>mx(e[0]))),c=Math.max(...ext.map(e=>mx(e[2]))),b=Math.min(...ext.map(e=>my(e[3]))),d=Math.max(...ext.map(e=>my(e[1])));
   V={cx:(a+c)/2,cy:(b+d)/2,z:Math.max(1,Math.min(17,Math.log2(Math.min((W-30)/((c-a)*TW||1),(H-30)/((d-b)*TW||1)))))}}
@@ -124,11 +129,16 @@ function drawMap(it,scope,rf){const W=600,H=520;tf={x:0,y:0,k:1};
  let o=`<rect width="${W}" height="${H}" fill="${bm?"#cfd8dc":"transparent"}"/><g id="vp">${t}`;
  if(cl)o+=`<defs><clipPath id="cp">${scope.filter(u=>ok(u.f)).map(u=>`<path d="${path(u.f.geometry)}"/>`).join("")}</clipPath></defs>`;
  o+=`<path d="${B.filter(u=>ok(u.f)).map(u=>path(u.f.geometry)).join("")}" fill="none" stroke="#9aa5b1" stroke-width=".6"/>`;
- if(R)o+=`<g ${cl?'clip-path="url(#cp)"':""}>`+R.fc.features.filter(ok).map(f=>`<path d="${path(f.geometry)}" fill="${CO[lvl(f.properties[rk])]||"#9aa5b1"}" fill-opacity="${bm?.6:.8}"/>`).join("")+"</g>";
+ if(R){const gp={};R.fc.features.filter(ok).forEach(f=>{const v=lvl(f.properties[rk]);gp[v]=(gp[v]||"")+path(f.geometry)});o+=`<g ${cl?'clip-path="url(#cp)"':""}>`+Object.entries(gp).map(([v,d])=>`<path d="${d}" fill="${CO[v]||"#9aa5b1"}" fill-opacity="${bm?.6:.8}"/>`).join("")+"</g>"}
  if(cl)o+=`<path d="${scope.filter(u=>ok(u.f)).map(u=>path(u.f.geometry)).join("")}" fill="none" stroke="${bm=="sat"?"#fff":"#18222d"}" stroke-width="${sel.s||sel.p?2.2:1.5}"/>`;
- const rr=Math.min(7,2+V.z/4);
- it.forEach(i=>{const g=i.f.geometry,c=CO[i.lv]||"#777",w=[mx(i.pt[0]),my(i.pt[1])];if(w[0]<vx0||w[0]>vx1||w[1]<vy0||w[1]>vy1)return;if(/Line/.test(g.type))o+=`<path d="${(g.type=="LineString"?[g.coordinates]:g.coordinates).map(line).join("")}" stroke="${c}" stroke-width="2.2" fill="none"/>`;else if(/Polygon/.test(g.type))o+=`<path d="${path(g)}" fill="${c}" stroke="#333" stroke-width=".5"/>`;else{const[x,y]=P(i.pt);o+=`<circle cx="${x}" cy="${y}" r="${rr}" fill="${c}" stroke="#222" stroke-width=".8"/>`}});
- if(hl){const[x,y]=P(hl.pt);o+=`<circle cx="${x}" cy="${y}" r="13" fill="none" stroke="#1f5fa8" stroke-width="3.5"/><text x="${+x+16}" y="${+y-10}" font-size="13" font-weight="700" fill="#111" stroke="#fff" stroke-width="3.5" paint-order="stroke">${hl.nm}</text>`}
+ const rr=psz*Math.max(.35,Math.min(1.6,.35+(V.z-7)*.12)),dp={},dl={},dg={},lb=[],fx=c=>c=="#ffffff"?"#b0bec5":c;
+ it.forEach(i=>{const g=i.f.geometry,w=[mx(i.pt[0]),my(i.pt[1])];if(w[0]<vx0||w[0]>vx1||w[1]<vy0||w[1]>vy1)return;const v=i.lv;
+  if(/Line/.test(g.type))dl[v]=(dl[v]||"")+(g.type=="LineString"?[g.coordinates]:g.coordinates).map(line).join("");else if(/Polygon/.test(g.type))dg[v]=(dg[v]||"")+path(g);else{const[x,y]=P(i.pt);dp[v]=(dp[v]||"")+"M"+x+" "+y+"h.01";lb.push([x,y,i.nm])}});
+ for(const[v,d]of Object.entries(dg))o+=`<path d="${d}" fill="${fx(CO[v]||"#777")}" stroke="#333" stroke-width=".4"/>`;
+ for(const[v,d]of Object.entries(dl))o+=`<path d="${d}" stroke="${fx(CO[v]||"#777")}" stroke-width="${Math.max(1,rr*.7).toFixed(1)}" fill="none"/>`;
+ for(const[v,d]of Object.entries(dp))o+=`<path d="${d}" stroke="${fx(CO[v]||"#777")}" stroke-width="${(2*rr).toFixed(1)}" stroke-linecap="round" fill="none"/>`;
+ if(V.z>=12.5&&lb.length&&lb.length<=150)o+=lb.map(([x,y,t])=>`<text x="${+x+6}" y="${+y-6}" font-size="11" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(t)}</text>`).join("");
+ if(hl){const[x,y]=P(hl.pt);o+=`<circle cx="${x}" cy="${y}" r="13" fill="none" stroke="#1f5fa8" stroke-width="3.5"/><text x="${+x+16}" y="${+y-10}" font-size="13" font-weight="700" fill="#111" stroke="#fff" stroke-width="3.5" paint-order="stroke">${esc(hl.nm)}</text>`}
  $("map").innerHTML=o+"</g>"}
 const GER=n=>/escu|educ|ie\b|colegio/i.test(n)?"DRE Cajamarca":/salud|estab/i.test(n)?"DIRESA":/v[ií]a|carre|vial/i.test(n)?"Gerencia de Infraestructura":/parcel|agr|cultiv/i.test(n)?"Gerencia de Desarrollo Económico":"Gerencia de Gestión del Riesgo";
 function exec(it,scope){const lev=sel.s?"s":sel.p?"s":sel.d?"p":"p",k=sel.p||sel.s?"dis":"pro",m={};
@@ -137,9 +147,9 @@ function exec(it,scope){const lev=sel.s?"s":sel.p?"s":sel.d?"p":"p",k=sel.p||sel
  $("eh").textContent="Prioridad de intervención – "+(k=="dis"?"distritos":"provincias")+" · "+(scn||"sin escenario");
  $("ex").innerHTML="<tr><th>"+(k=="dis"?"Distrito":"Provincia")+"</th><th>Semáforo</th><th>Elementos en riesgo alto/muy alto</th><th>Intervienen</th></tr>"+rows.map(([n,v])=>{const r=v.s/mx,t=r>=.6?["Rojo – crítico","#c62828"]:r>=.3?["Naranja – alto","#ef6c00"]:v.s>0?["Ámbar – vigilancia","#b88700"]:["Verde – normal","#43a047"],ls=Object.entries(v.L).sort((a,b)=>b[1]-a[1]);
   return`<tr><td>${n}</td><td><span class="pill" style="background:${t[1]}">${t[0]}</span></td><td>${ls.map(([a,b])=>a+": "+b).join(" · ")||"—"}</td><td>${r>=.3?[...new Set(ls.map(l=>GER(l[0])))].join(", "):"Monitoreo"}</td></tr>`}).join("")}
-function panel(){$("lt").innerHTML="<tr><th>Capa</th><th>Entidades</th><th>Rol</th><th></th></tr>"+layers.map((l,i)=>`<tr><td>${l.name}${l.demo?" (demo)":""}${l.role=="riesgo"?` <small class="mu">· ${l.ent} / ${l.comp}</small>`:""}</td><td>${l.fc.features.length}</td><td><select data-i="${i}">${["limite","riesgo","expuesto"].map(r=>`<option ${r==l.role?"selected":""}>${r}</option>`).join("")}</select></td><td><button class="b" data-x="${i}">✕</button></td></tr>`).join("");
- $("lt").querySelectorAll("select").forEach(s=>s.onchange=()=>{layers[s.dataset.i].role=s.value;build();panel()});$("lt").querySelectorAll("button").forEach(b=>b.onclick=()=>{layers.splice(b.dataset.x,1);build();panel()});
- $("u1").value=src.c||"";$("u2").value=src.s||"";$("ul").innerHTML=[src.c&&"CENEPRED: "+src.c,src.s&&"SENAMHI: "+src.s].filter(Boolean).join("<br>")}
+function panel(){$("lt").innerHTML="<tr><th>Capa</th><th>Entidades</th><th>Rol</th><th>Etiqueta</th><th></th></tr>"+layers.map((l,i)=>`<tr><td>${l.name}${l.demo?" (demo)":""}${l.role=="riesgo"?` <small class="mu">· ${l.ent} / ${l.comp}</small>`:""}</td><td>${l.fc.features.length}</td><td><select data-i="${i}">${["limite","riesgo","expuesto"].map(r=>`<option ${r==l.role?"selected":""}>${r}</option>`).join("")}</select></td><td>${l.role=="expuesto"?`<select data-lab="${i}">${Object.keys(l.fc.features[0].properties||{}).map(k=>`<option ${k==l.lab?"selected":""}>${k}</option>`).join("")}</select>`:"—"}</td><td><button class="b" data-x="${i}">✕</button></td></tr>`).join("");
+ $("lt").querySelectorAll("select[data-lab]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.lab];l.lab=s.value;dbPut(l);Object.values(cache).forEach(a=>a.forEach(i=>{if(i.l==l.name)i.nm=nmL(l,i.f)}));render()});$("lt").querySelectorAll("select[data-i]").forEach(s=>s.onchange=()=>{layers[s.dataset.i].role=s.value;dbPut(layers[s.dataset.i]);build();panel()});$("lt").querySelectorAll("button").forEach(b=>b.onclick=()=>{const x=layers.splice(b.dataset.x,1)[0];if(x&&x.id)dbDel(x.id);build();panel()});
+ }
 function demo(){layers=[];const PN={"San Ignacio":[0,0],"Jaén":[1,0],"Cutervo":[2,0],"Santa Cruz":[0,1],"Chota":[1,1],"San Miguel":[0,2],"Hualgayoc":[1,2],"Celendín":[2,2],"San Pablo":[0,3],"Cajamarca":[1,3],"San Marcos":[2,3],"Contumazá":[0,4],"Cajabamba":[2,4]};
  const X0=-79,Y1=-4.3,w=.5,h=.68,sq=(a,b,c,d)=>({type:"Polygon",coordinates:[[[a,b],[c,b],[c,d],[a,d],[a,b]]]}),bf=[];
  for(const[p,[c,r]]of Object.entries(PN))for(let i=0;i<4;i++){const a=X0+c*w+(i%2)*w/2,b=Y1-r*h-(i>>1)*h/2;bf.push({type:"Feature",properties:{DEPARTAMEN:"CAJAMARCA",PROVINCIA:p,DISTRITO:p+" D"+(i+1)},geometry:sq(a,b-h/2,a+w/2,b)})}
@@ -149,12 +159,12 @@ function demo(){layers=[];const PN={"San Ignacio":[0,0],"Jaén":[1,0],"Cutervo":
  pts("Centros educativos",420,"I.E. N°");pts("Establecimientos de salud",90,"P.S.");
  const v=[];for(let i=0;i<70;i++){const a=X0+rn()*1.4,b=Y1-rn()*3.3;v.push({type:"Feature",properties:{NOMBRE:"Vía "+(i+1)},geometry:{type:"LineString",coordinates:[[a,b],[a+.08*rn(),b-.1*rn()]]}})}addLayer("Red vial",{features:v},1)}
 let pend=null;const msg=t=>$("ms").textContent=t;
-async function load(files,cfg){let n=0;for(const f of files){if(!/\.(geo)?json$/i.test(f.name))continue;try{const c=layers.length;addLayer(f.name.replace(/\.\w+$/,""),JSON.parse(await f.text()));if(layers.length>c){n++;const l=layers[layers.length-1];if(cfg&&cfg.role){l.role=cfg.role;if(cfg.ent){l.ent=cfg.ent;l.comp=cfg.comp;scn=l.name}}}}catch(e){}}
+async function load(files,cfg){let n=0;for(const f of files){if(!/\.(geo)?json$/i.test(f.name))continue;try{const c=layers.length;addLayer(f.name.replace(/\.\w+$/,""),JSON.parse(await f.text()));if(layers.length>c){n++;const l=layers[layers.length-1];l.id=Date.now()+"_"+Math.random().toString(36).slice(2);if(cfg&&cfg.role){l.role=cfg.role;if(cfg.ent){l.ent=cfg.ent;l.comp=cfg.comp;scn=l.name}}dbPut(l)}}catch(e){}}
  if(n)layers=layers.filter(l=>!l.demo);build();panel();msg(n?"✓ "+n+" capa(s) cargada(s). Ve a «Mapa y análisis».":"✗ No se cargó ninguna capa (¿es GeoJSON?)")}
 document.querySelectorAll("[data-ld]").forEach(b=>b.onclick=()=>{pend=b.dataset;$("fx").value="";$("fx").click()});$("fx").onchange=e=>load(e.target.files,pend);
 $("fdb").onclick=()=>{pend={role:"expuesto"};$("fd").value="";$("fd").click()};$("fd").onchange=e=>load(e.target.files,pend);
-$("cl").onclick=()=>{layers=[];build();panel()};$("dm").onclick=()=>{demo();build();panel()};
-$("us").onclick=()=>{src={c:$("u1").value.trim(),s:$("u2").value.trim()};try{localStorage.setItem("src",JSON.stringify(src))}catch(e){}panel()};
+$("cl").onclick=()=>{layers=[];dbClear();build();panel()};$("dm").onclick=()=>{demo();dbClear();build();panel()};
+
 $("sd").onchange=e=>{sel={d:e.target.value,p:"",s:""};hl=null;render()};$("sp").onchange=e=>{sel.p=e.target.value;sel.s="";hl=null;render()};$("ss").onchange=e=>{sel.s=e.target.value;hl=null;render()};
 $("rs").onclick=()=>{sel={d:"",p:"",s:""};open=null;hl=null;const r=layers.find(l=>l.role=="riesgo");scn=r?r.name:"";render()};
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x==b));["a","b","c"].forEach(i=>$(i).classList.toggle("hide",i!=b.dataset.t));$("bar").classList.toggle("hide",b.dataset.t=="c")});
@@ -165,9 +175,14 @@ const dz=(f,p)=>{if(!V)return;p=p||[300,260];tf.x=p[0]-(p[0]-tf.x)*f;tf.y=p[1]-(
 mp.onpointerdown=e=>{dr=pk(e);mp.setPointerCapture(e.pointerId)};mp.onpointerup=()=>{if(dr){dr=null;cm()}};
 mp.onpointermove=e=>{if(!dr||!V)return;const p=pk(e);tf.x+=p[0]-dr[0];tf.y+=p[1]-dr[1];dr=p;ap()};
 mp.onwheel=e=>{e.preventDefault();dz(e.deltaY<0?1.41:.71,pk(e))};
-$("zi").onclick=()=>dz(2);$("zo").onclick=()=>dz(.5);$("zh").onclick=()=>drawMap(lastIt,lastSc,true);$("bm").onchange=()=>drawMap(lastIt,lastSc,false);
+$("zi").onclick=()=>dz(2);$("zo").onclick=()=>dz(.5);$("zh").onclick=()=>drawMap(lastIt,lastSc,true);$("bm").onchange=()=>drawMap(lastIt,lastSc,false);$("ps").oninput=()=>{psz=+$("ps").value;drawMap(lastIt,lastSc,false)};
 demo();build();panel();
-fetch("capas/manifest.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(async m=>{if(!m||!m.items||!m.items.length)return;layers=[];
- for(const it of m.items){try{const fc=await(await fetch(it.url)).json(),c=layers.length;addLayer(it.name,fc);if(layers.length>c){const l=layers[layers.length-1];l.role=it.role;if(it.ent){l.ent=it.ent;l.comp=it.comp}}}catch(e){}}
- build();panel();msg("✓ Capas cargadas desde el repositorio ("+layers.length+")")}).catch(()=>{});
+const boot=async()=>{let crash=false;try{crash=localStorage.getItem("boot")=="1";localStorage.setItem("boot","1")}catch(e){}
+ const done=()=>{try{localStorage.removeItem("boot")}catch(e){}};
+ if(crash){msg("⚠ La sesión anterior se cerró mientras cargaba. Las capas guardadas NO se restauraron: pulsa «Restaurar guardadas».");done();return}
+ const a=await dbAll();if(a.length){layers=a;build();panel();msg("✓ "+a.length+" capa(s) restauradas del navegador");done();return}
+ const m=await fetch("capas/manifest.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
+ if(m&&m.items&&m.items.length){layers=[];for(const it of m.items){try{const fc=await(await fetch(it.url)).json(),c=layers.length;addLayer(it.name,fc);if(layers.length>c){const l=layers[layers.length-1];l.role=it.role;if(it.ent){l.ent=it.ent;l.comp=it.comp}}}catch(e){}}build();panel();msg("✓ Capas cargadas desde el repositorio ("+layers.length+")")}done()};
+$("rg").onclick=async()=>{const a=await dbAll();if(a.length){layers=a;build();panel();msg("✓ "+a.length+" capa(s) restauradas")}else msg("No hay capas guardadas")};
+boot();
 </script></body></html>
