@@ -1,0 +1,13 @@
+{
+  "dep": "CAJAMARCA",
+  "limites": "datos/limites/distrito.gpkg",
+  "fuentes": [
+    {"fuente": "datos/cenepred/cenepred.gpkg", "capas": ["suscep_mm"], "region": "CAJAMARCA",
+     "role": "riesgo", "ent": "CENEPRED", "comp": "Movimiento en masa"},
+    {"fuente": "datos/senamhi/aviso_24h.zip",
+     "role": "riesgo", "ent": "SENAMHI", "comp": "Aviso 24 h"},
+    {"fuente": "datos/senamhi/quebrada.zip",
+     "role": "riesgo", "ent": "SENAMHI", "comp": "Activación de quebrada"},
+    {"fuente": "datos/gore/gore.gpkg", "role": "expuesto"}
+  ]
+}
