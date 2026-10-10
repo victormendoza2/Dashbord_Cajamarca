@@ -46,7 +46,7 @@ svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;borde
 <p><span class="st">PASO 1 · Descargar</span> el dato oficial (en tu PC):</p>
 <div class="row"><a class="b" target="_blank" rel="noopener" href="https://www.senamhi.gob.pe/?&p=aviso-24H">SENAMHI · Aviso 24 h (ZIP)</a><a class="b" target="_blank" rel="noopener" href="https://www.senamhi.gob.pe/?&p=aviso-activacion-quebrada">SENAMHI · Activación de quebrada (ZIP)</a></div>
 <div class="row"><input type="text" id="u1" placeholder="Enlace CENEPRED (opcional, solo referencia)"><input type="text" id="u2" placeholder="Otro enlace (opcional)"><button class="b" id="us">Guardar</button></div><div id="ul" class="mu"></div>
-<p><span class="st">PASO 2 · Convertir</span> con <code>etl_capas.py</code> (Python en tu PC). Corrige la topología, recorta a Cajamarca y genera GeoJSON:</p>
+<p><span class="st">PASO 2 · Procesar</span> <a class="b" href="procesador.html" target="_blank" rel="noopener">🛠 Abrir procesador de capas</a><br>Limpia, recorta y convierte SENAMHI (ZIP/shapefile) y GeoJSON sin instalar nada. <small class="mu">Opción avanzada para GDB/GPKG pesados, con Python:</small></p>
 <pre>python etl_capas.py --fuente aviso_24h.zip --limites distrito.gpkg --dep CAJAMARCA --salida capas/senamhi_24h
 python etl_capas.py --fuente CENEPRED.gdb --limites distrito.gpkg --dep CAJAMARCA --salida capas/cenepred --capas suscep_mm</pre>
 <small class="mu">¿No sabes qué capas trae el GDB? Ejecuta primero: <code>python etl_capas.py --fuente CENEPRED.gdb --listar</code></small>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Procesador de capas – Cajamarca</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/shpjs@4.0.4/dist/shp.min.js"></script>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--tx:#18222d;--mu:#6b7785;--bd:#dde3e9;--ac:#1f5fa8}
+@media (prefers-color-scheme:dark){:root{--bg:#10161c;--card:#19222b;--tx:#e8edf2;--mu:#93a1b0;--bd:#2a3744;--ac:#5aa0ea}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{padding:14px 18px;background:var(--card);border-bottom:1px solid var(--bd)}h1{font-size:18px;margin:0}small,.mu{color:var(--mu)}
+main{max-width:820px;margin:auto;padding:16px 18px}.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px}
+.card h2{font-size:14px;margin:0 0 8px}.st{color:var(--ac);font-weight:700}
+select,.b{padding:7px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--card);color:var(--tx);font:inherit;cursor:pointer;display:inline-block;text-decoration:none}
+.b.p{background:var(--ac);color:#fff;border-color:var(--ac)}.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;align-items:center}
+.hide{display:none}progress{width:100%}pre{background:var(--bg);padding:8px;border-radius:6px;white-space:pre-wrap;font-size:12px}
+</style></head><body>
+<header><h1>Procesador de capas</h1><small>Limpia, recorta y convierte a GeoJSON – sin instalar nada. Es la pieza 2; el dashboard es <a href="index.html" style="color:var(--ac)">index.html</a>.</small></header>
+<main>
+<div class="card"><h2><span class="st">1.</span> Límites distritales (GeoJSON o shapefile ZIP)</h2>
+<label class="b">Elegir límites<input type="file" id="fl" accept=".geojson,.json,.zip" class="hide"></label> <span id="ml" class="mu"></span>
+<div class="row"><select id="sd"></select><select id="sp"></select><select id="ss"></select></div>
+<small class="mu">Campos reconocidos: NOMBDEP / NOMBPROV / NOMBDIST (o DEPARTAMEN / PROVINCIA / DISTRITO). Elige el ámbito de recorte.</small></div>
+<div class="card"><h2><span class="st">2.</span> Capas a procesar (SENAMHI ZIP, shapefile ZIP o GeoJSON)</h2>
+<label class="b">Elegir capas<input type="file" id="fc" multiple accept=".geojson,.json,.zip" class="hide"></label> <span id="mc" class="mu"></span>
+<div class="row"><label><input type="checkbox" id="rep" checked> Reparar topología</label>
+<label>Simplificar <select id="tol"><option value="0">no</option><option value="0.00005">fina (~5 m)</option><option value="0.0001" selected>media (~11 m)</option><option value="0.0005">fuerte (~55 m)</option></select></label></div></div>
+<div class="card"><h2><span class="st">3.</span> Procesar y descargar</h2>
+<button class="b p" id="go">▶ Procesar</button><div class="row"><progress id="pg" value="0" max="1" class="hide"></progress></div><pre id="log">Esperando archivos…</pre><div id="dl"></div>
+<small class="mu">Las líneas se conservan si tocan el ámbito (no se cortan). Para GDB/GPKG pesados usa QGIS o el script <code>etl_capas.py</code>. Luego carga los GeoJSON en el dashboard.</small></div>
+</main>
+<script>
+const $=i=>document.getElementById(i);let LIM=null,SRC=[];
+const key=(p,re)=>Object.keys(p||{}).find(k=>re.test(k)),uniq=a=>[...new Set(a)].sort();
+const u=f=>{const p=f.properties||{};return{d:p[key(p,/^(depart|nombdep)/i)]||"",p:p[key(p,/^(provin|nombprov)/i)]||"",s:p[key(p,/^(distri|nombdist)/i)]||""}};
+const log=t=>$("log").textContent=t;
+async function leer(file){let r;if(/\.zip$/i.test(file.name))r=await shp(await file.arrayBuffer());else r=JSON.parse(await file.text());
+ return(Array.isArray(r)?r:[r]).map((fc,i)=>({name:(fc.fileName||file.name).replace(/\.\w+$/,"").replace(/[^\w\-]+/g,"_")||("capa"+i),fc}))}
+function opts(el,ph,arr){el.innerHTML=`<option value="">${ph}</option>`+arr.map(x=>`<option>${x}</option>`).join("")}
+function selects(){const d=$("sd").value,p=$("sp").value;opts($("sp"),"Provincia",uniq(LIM.features.map(u).filter(x=>!d||x.d==d).map(x=>x.p)));$("sp").value=p&&[...$("sp").options].some(o=>o.value==p)?p:"";
+ const pp=$("sp").value;opts($("ss"),"Distrito",uniq(LIM.features.map(u).filter(x=>(!d||x.d==d)&&(!pp||x.p==pp)).map(x=>x.s)))}
+$("fl").onchange=async e=>{try{const r=await leer(e.target.files[0]);LIM=r[0].fc;opts($("sd"),"Departamento",uniq(LIM.features.map(u).map(x=>x.d)));selects();$("ml").textContent="✓ "+LIM.features.length+" polígonos"}catch(x){$("ml").textContent="✗ "+x.message}};
+$("sd").onchange=()=>{$("sp").value="";selects()};$("sp").onchange=selects;
+$("fc").onchange=async e=>{SRC=[];try{for(const f of e.target.files)SRC.push(...await leer(f));$("mc").textContent="✓ "+SRC.map(s=>s.name+" ("+s.fc.features.length+")").join(", ")}catch(x){$("mc").textContent="✗ "+x.message}};
+const tick=()=>new Promise(r=>setTimeout(r));
+function fix(f){try{const g=turf.buffer(f,0,{units:"meters"});return g&&g.geometry?g:f}catch(e){return f}}
+$("go").onclick=async()=>{if(!LIM||!SRC.length)return log("Falta cargar límites y al menos una capa.");
+ const d=$("sd").value,p=$("sp").value,s=$("ss").value,fs=LIM.features.filter(f=>{const x=u(f);return(!d||x.d==d)&&(!p||x.p==p)&&(!s||x.s==s)});
+ if(!fs.length)return log("El ámbito elegido no tiene polígonos.");
+ const amb=(s||p||d||"todo").replace(/\W+/g,"_"),tol=+$("tol").value,rep=$("rep").checked;$("dl").innerHTML="";$("pg").classList.remove("hide");
+ log("Uniendo ámbito…");await tick();let mask=fs[0];for(let i=1;i<fs.length;i++){try{mask=turf.union(mask,fix(fs[i]))}catch(e){}}
+ const mb=turf.bbox(mask),mp=turf.bboxPolygon(mb);let rep_="";
+ for(const L of SRC){const out=[],F=L.fc.features;let bad=0;
+  for(let i=0;i<F.length;i++){let f=F[i];if(!f.geometry)continue;if(i%40==0){$("pg").value=i/F.length;log(L.name+": "+i+"/"+F.length);await tick()}
+   try{const t=f.geometry.type;if(!turf.booleanIntersects(turf.bboxPolygon(turf.bbox(f)),mp))continue;
+    if(/Polygon/.test(t)){if(rep)f=fix(f);let r=turf.intersect(f,mask);if(!r)continue;r.properties=F[i].properties;if(tol)r=turf.simplify(r,{tolerance:tol,highQuality:false});out.push(r)}
+    else if(/Point/.test(t)){if(turf.booleanIntersects(f,mask))out.push(f)}
+    else if(turf.booleanIntersects(f,mask))out.push(f)}catch(e){bad++}}
+  const fc=turf.truncate(turf.featureCollection(out),{precision:6}),blob=new Blob([JSON.stringify(fc)],{type:"application/geo+json"}),n=L.name+"_"+amb+".geojson";
+  const a=document.createElement("a");a.className="b p";a.href=URL.createObjectURL(blob);a.download=n;a.textContent="⬇ "+n+" ("+out.length+" de "+F.length+", "+(blob.size/1e6).toFixed(1)+" MB)";$("dl").append(a," ");
+  rep_+=L.name+": "+out.length+" entidades"+(bad?" ("+bad+" con error, omitidas)":"")+"\n"}
+ $("pg").classList.add("hide");log("✅ Listo\n"+rep_+"Carga estos GeoJSON en el dashboard (Capas y fuentes).")};
+</script></body></html>
