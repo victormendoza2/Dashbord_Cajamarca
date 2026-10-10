@@ -50,15 +50,18 @@ svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;borde
 <button class="b" data-ld data-role="riesgo" data-ent="SENAMHI" data-comp="Aviso 24 h">SENAMHI · Aviso 24 h</button>
 <button class="b" data-ld data-role="riesgo" data-ent="SENAMHI" data-comp="Activación de quebrada">SENAMHI · Activación de quebrada</button>
 <button class="b" data-ld data-role="expuesto">Elementos expuestos (GORE)</button></div>
+<div class="row" style="margin-top:10px"><b>Otro escenario:</b><input type="text" id="oe" value="SERFOR" size="10"><input type="text" id="oc" value="Incendios forestales" size="18"><button class="b" id="ob">＋ Cargar capa de otro escenario</button></div>
 <input type="file" id="fx" multiple accept=".geojson,.json" class="hide"><input type="file" id="fd" webkitdirectory class="hide">
 <div class="row" style="margin-top:10px"><button class="b" id="fdb">📁 Cargar carpeta completa de elementos expuestos (GORE)</button><span id="ms" class="mu"></span></div>
 <p class="mu">Elementos expuestos: colegios, salud, vías, parcelas… en GeoJSON. Puedes subir los que quieras: el análisis usa todas las capas cargadas.</p></div>
 <div class="card"><h2>Capas cargadas</h2><div class="ov"><table id="lt"></table></div><div class="row"><button class="b" id="rg">Restaurar guardadas</button><button class="b" id="dm">Restaurar demo</button><button class="b rs" id="cl">Quitar todas</button></div></div></section>
 </main>
+<div id="busy" style="display:none;position:fixed;right:12px;bottom:12px;background:var(--ac);color:#fff;padding:8px 12px;border-radius:8px;z-index:9"></div>
 <script>
 const SCS={C:{L:["","Muy bajo","Bajo","Medio","Alto","Muy alto"],C:["","#a1d99b","#238b45","#ffff00","#ff9800","#f44336"]},S:{L:["","Nivel 1","Nivel 2","Nivel 3","Nivel 4"],C:["","#ffffff","#ffff00","#ffa500","#ff0000"]}},$=i=>document.getElementById(i);let LV=SCS.S.L,CO=SCS.S.C,N=4,RG=[1,2,3,4],V=null,keep=false,lastIt=[],lastSc=[];const TW=256,mx=l=>(l+180)/360,my=a=>{const r=a*Math.PI/180;return(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2};
-function setScale(){const R=layers.find(l=>l.name==scn&&l.role=="riesgo"),g=R&&key(R.fc.features[0].properties,/gridcode/i),c=g?SCS.C:SCS.S;LV=c.L;CO=c.C;N=LV.length-1;RG=[...Array(N).keys()].map(i=>i+1);if(N!=lastN){hideLv=new Set();lastN=N}}
-const guess=(n,p)=>{const g=key(p,/gridcode/i),[ent,comp]=/inund/i.test(n)?["CENEPRED","Inundaciones"]:/mm|movim|masa|remoc/i.test(n)?["CENEPRED","Movimiento en masa"]:/24/.test(n)?["SENAMHI","Aviso 24 h"]:/quebrada|activ/i.test(n)?["SENAMHI","Activación de quebrada"]:g?["CENEPRED","Otro escenario"]:/senamhi|aviso/i.test(n)?["SENAMHI","Otro aviso"]:["Otras","Escenario"];return{ent,comp}};
+function setScale(){const R=layers.find(l=>l.name==scn&&l.role=="riesgo"),g=R&&nsOf(R)==5,c=g?SCS.C:SCS.S;LV=c.L;CO=c.C;N=LV.length-1;RG=[...Array(N).keys()].map(i=>i+1);if(N!=lastN){hideLv=new Set();lastN=N}}
+const lfOf=R=>R.lf||key(R.fc.features[0].properties,/gridcode|niv|riesg|peligro|grado|susc|categ|clase/i),nsOf=R=>R.ns||(key(R.fc.features[0].properties,/gridcode/i)?5:4);
+const guess=(n,p)=>{const g=key(p,/gridcode/i),[ent,comp]=/incend|serfor/i.test(n)?["SERFOR","Incendios forestales"]:/inund/i.test(n)?["CENEPRED","Inundaciones"]:/mm|movim|masa|remoc/i.test(n)?["CENEPRED","Movimiento en masa"]:/24/.test(n)?["SENAMHI","Aviso 24 h"]:/quebrada|activ/i.test(n)?["SENAMHI","Activación de quebrada"]:g?["CENEPRED","Otro escenario"]:/senamhi|aviso/i.test(n)?["SENAMHI","Otro aviso"]:["Otras","Escenario"];return{ent,comp}};
 let layers=[],B=[],S=null,sel={d:"",p:"",s:""},scn="",open=null,hl=null,cache={},src={};
 try{src=JSON.parse(localStorage.getItem("src")||"{}")}catch(e){}
 const key=(p,re)=>Object.keys(p||{}).find(k=>re.test(k));
@@ -68,7 +71,8 @@ const flat=g=>g.type=="Point"?[g.coordinates]:g.type=="MultiPoint"||g.type=="Lin
 function bb(f){if(f._b)return f._b;const c=flat(f.geometry);let a=1e9,b=1e9,x=-1e9,y=-1e9;c.forEach(([u,v])=>{a=Math.min(a,u);x=Math.max(x,u);b=Math.min(b,v);y=Math.max(y,v)});return f._b=[a,b,x,y]}
 function rep(g){const c=flat(g);if(g.type.includes("Point"))return c[0];if(g.type.includes("Line"))return c[c.length>>1];const n=c.length;return[c.reduce((a,p)=>a+p[0],0)/n,c.reduce((a,p)=>a+p[1],0)/n]}
 function ring(p,r){let i=false;for(let a=0,b=r.length-1;a<r.length;b=a++)if((r[a][1]>p[1])!=(r[b][1]>p[1])&&p[0]<(r[b][0]-r[a][0])*(p[1]-r[a][1])/(r[b][1]-r[a][1])+r[a][0])i=!i;return i}
-const inF=(p,f)=>{const b=bb(f);if(p[0]<b[0]||p[0]>b[2]||p[1]<b[1]||p[1]>b[3])return false;return polys(f.geometry).some(q=>ring(p,q[0])&&!q.slice(1).some(h=>ring(p,h)))};
+const PB=new WeakMap(),pbox=q=>{let a=1e9,c=1e9,e=-1e9,g=-1e9;for(const v of q[0]){if(v[0]<a)a=v[0];if(v[0]>e)e=v[0];if(v[1]<c)c=v[1];if(v[1]>g)g=v[1]}return[a,c,e,g]};
+const inF=(p,f)=>{const b=bb(f);if(p[0]<b[0]||p[0]>b[2]||p[1]<b[1]||p[1]>b[3])return false;let P=PB.get(f);if(!P){P=polys(f.geometry).map(q=>({q,b:pbox(q)}));PB.set(f,P)}for(const o of P){if(p[0]<o.b[0]||p[0]>o.b[2]||p[1]<o.b[1]||p[1]>o.b[3])continue;if(ring(p,o.q[0])&&!o.q.slice(1).some(h=>ring(p,h)))return true}return false};
 const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])),defLab=p=>{const k=Object.keys(p||{});return k.find(x=>/nom|name|denom|cen_edu|insti|razon/i.test(x))||k.find(x=>typeof p[x]=="string")||k[0]||""};
 const nmL=(l,f)=>{const v=l.lab&&f.properties?f.properties[l.lab]:null;return v!=null&&v!==""?v:nm(f.properties)};
 const fieldsOf=l=>[...new Set(l.fc.features.slice(0,300).flatMap(f=>Object.keys(f.properties||{})))],
@@ -77,19 +81,22 @@ const nm=p=>{const k=key(p,/^(nombre|name|nom_|cen_edu|nom)/i);return k?p[k]:Obj
 let hideLv=new Set(),hideL=new Set(),psz=3,lastN=0;
 const DB=()=>new Promise((ok,ko)=>{const r=indexedDB.open("riesgos",1);r.onupgradeneeded=()=>r.result.createObjectStore("l",{keyPath:"id"});r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)});
 const dbDo=async(m,f)=>{try{const d=await DB();return await new Promise((ok,ko)=>{const t=d.transaction("l",m),q=f(t.objectStore("l"));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>ko(t.error)})}catch(e){return null}};
-const dbPut=l=>dbDo("readwrite",o=>o.put({id:l.id,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,fc:l.fc})),dbDel=id=>dbDo("readwrite",o=>o.delete(id)),dbClear=()=>dbDo("readwrite",o=>o.clear()),dbAll=async()=>(await dbDo("readonly",o=>o.getAll()))||[];
-function gridOf(R){if(R._g)return R._g;const F=R.fc.features,e=F.map(bb);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;e.forEach(b=>{if(b[0]<x0)x0=b[0];if(b[1]<y0)y0=b[1];if(b[2]>x1)x1=b[2];if(b[3]>y1)y1=b[3]});
+const dbPut=l=>dbDo("readwrite",o=>o.put({id:l.id,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns,fc:l.fc})),dbDel=id=>dbDo("readwrite",o=>o.delete(id)),dbClear=()=>dbDo("readwrite",o=>o.clear()),dbAll=async()=>(await dbDo("readonly",o=>o.getAll()))||[];
+function gridOf(R,FF){if(R._g)return R._g;const F=FF||R.fc.features,e=F.map(bb);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;e.forEach(b=>{if(b[0]<x0)x0=b[0];if(b[1]<y0)y0=b[1];if(b[2]>x1)x1=b[2];if(b[3]>y1)y1=b[3]});
  const n=Math.max(1,Math.min(256,Math.ceil(Math.sqrt(F.length/4)))),cw=(x1-x0)/n||1,ch=(y1-y0)/n||1,c=new Map();
  e.forEach((b,i)=>{const a=Math.floor((b[0]-x0)/cw),z=Math.min(n-1,Math.floor((b[2]-x0)/cw)),d=Math.floor((b[1]-y0)/ch),y=Math.min(n-1,Math.floor((b[3]-y0)/ch));for(let p=a;p<=z;p++)for(let q=d;q<=y;q++){const k=p*n+q;(c.get(k)||c.set(k,[]).get(k)).push(i)}});return R._g={x0,y0,cw,ch,n,c,F}}
 function lvAt(R,k,pt){const g=gridOf(R);let a=Math.floor((pt[0]-g.x0)/g.cw),d=Math.floor((pt[1]-g.y0)/g.ch);if(a<0||d<0||a>g.n||d>g.n)return 0;a=Math.min(a,g.n-1);d=Math.min(d,g.n-1);let lv=0;for(const i of g.c.get(a*g.n+d)||[]){const q=g.F[i];if(inF(pt,q))lv=Math.max(lv,lvl(q.properties[k]))}return lv}
 function addLayer(name,fc,demo){const fs=(fc.features||[]).filter(f=>f.geometry);if(!fs.length)return;const p=fs[0].properties||{},poly=/Polygon/.test(fs[0].geometry.type);
- const role=poly&&key(p,/^(distri|nombdist)/i)?"limite":poly&&key(p,/gridcode|niv|riesg|peligro|grado/i)?"riesgo":"expuesto";layers.push({name,fc:{features:fs},role,demo,lab:defLab(p),...guess(name,p)})}
-function build(){B=[];layers.filter(l=>l.role=="limite").forEach(l=>l.fc.features.forEach(f=>{const p=f.properties;B.push({f,dep:p[key(p,/^(depart|nombdep)/i)]||"",pro:p[key(p,/^(provin|nombprov)/i)]||"",dis:p[key(p,/^(distri|nombdist)/i)]||""})}));
- const r=layers.filter(l=>l.role=="riesgo");if(!r.find(l=>l.name==scn))scn=r[0]?r[0].name:"";cache={};sel={d:"",p:"",s:""};open=null;hl=null;V=null;render()}
-const unitOf=p=>B.find(u=>inF(p,u.f));
-function analyze(){if(cache[scn])return cache[scn];const R=layers.find(l=>l.name==scn&&l.role=="riesgo"),k=R&&key(R.fc.features[0].properties,/gridcode|niv|riesg|peligro|grado/i),out=[];
- layers.filter(l=>l.role=="expuesto").forEach(l=>l.fc.features.forEach(f=>{const pt=rep(f.geometry);if(!pt)return;const u=B.length?unitOf(pt):{dep:"",pro:"",dis:""};if(!u)return;let lv=0;
-  if(R)lv=lvAt(R,k,pt);out.push({l:l.name,f,pt,nm:nmL(l,f),dep:u.dep,pro:u.pro,dis:u.dis,lv})}));return cache[scn]=out}
+ const role=poly&&key(p,/^(distri|nombdist)/i)?"limite":poly&&key(p,/gridcode|niv|riesg|peligro|grado/i)?"riesgo":"expuesto";layers.push({name,fc:{features:fs},role,demo,lab:defLab(p),lf:key(p,/gridcode|niv|riesg|peligro|grado|susc|categ|clase/i)||"",ns:key(p,/gridcode/i)?5:4,...guess(name,p)})}
+function build(skip){B=[];layers.filter(l=>l.role=="limite").forEach(l=>l.fc.features.forEach(f=>{const p=f.properties;B.push({f,dep:p[key(p,/^(depart|nombdep)/i)]||"",pro:p[key(p,/^(provin|nombprov)/i)]||"",dis:p[key(p,/^(distri|nombdist)/i)]||""})}));
+ const r=layers.filter(l=>l.role=="riesgo");if(!r.find(l=>l.name==scn))scn=r[0]?r[0].name:"";cache={};sel={d:"",p:"",s:""};open=null;hl=null;V=null;if(!skip)render()}
+const unitOf=p=>{if(!B._g)gridOf(B,B.map(u=>u.f));const g=B._g;let a=Math.floor((p[0]-g.x0)/g.cw),d=Math.floor((p[1]-g.y0)/g.ch);if(a<0||d<0||a>g.n||d>g.n)return null;a=Math.min(a,g.n-1);d=Math.min(d,g.n-1);for(const i of g.c.get(a*g.n+d)||[])if(inF(p,B[i].f))return B[i];return null};
+function* analyzeGen(){setScale();const sc=scn,R=layers.find(l=>l.name==sc&&l.role=="riesgo"),k=R&&lfOf(R),out=[],E=layers.filter(l=>l.role=="expuesto"),tot=E.reduce((a,l)=>a+l.fc.features.length,0);let n=0;
+ for(const l of E)for(const f of l.fc.features){if(++n%1000==0)yield[n,tot];const pt=rep(f.geometry);if(!pt)continue;const u=B.length?unitOf(pt):{dep:"",pro:"",dis:""};if(!u)continue;let lv=0;if(R)lv=lvAt(R,k,pt);out.push({l:l.name,f,pt,nm:nmL(l,f),dep:u.dep,pro:u.pro,dis:u.dis,lv})}
+ return cache[sc]=out}
+function analyze(){if(cache[scn])return cache[scn];const g=analyzeGen();let r;while(!(r=g.next()).done);return r.value}
+async function prepare(){if(cache[scn])return;const g=analyzeGen(),bz=$("busy");for(;;){const r=g.next();if(r.done)break;bz.style.display="block";bz.textContent="Analizando "+r.value[0].toLocaleString()+" / "+r.value[1].toLocaleString()+" elementos…";await new Promise(z=>setTimeout(z))}}
+async function rebuild(){build(true);await prepare();render();panel();$("busy").style.display="none"}
 const inS=u=>(!sel.d||u.dep==sel.d)&&(!sel.p||u.pro==sel.p)&&(!sel.s||u.dis==sel.s);
 const uniq=a=>[...new Set(a)].sort();
 function opts(el,ph,arr,v){el.innerHTML=`<option value="">${ph}</option>`+arr.map(x=>`<option ${x==v?"selected":""}>${x}</option>`).join("")}
@@ -98,7 +105,7 @@ function render(){setScale();const has=B.length>0;
  $("sd").disabled=$("sp").disabled=$("ss").disabled=!has;
  const RL=layers.filter(l=>l.role=="riesgo"),c0=RL.find(l=>l.name==scn),ce=c0?c0.ent:"";
  opts($("se"),"Entidad",uniq(RL.map(l=>l.ent)),ce);opts($("sk"),"Componente",uniq(RL.filter(l=>l.ent==ce).map(l=>l.comp)),c0?c0.comp:"");
- $("se").onchange=e=>{const l=RL.find(x=>x.ent==e.target.value);if(l){scn=l.name;V=null;hl=null;render()}};$("sk").onchange=e=>{const l=RL.find(x=>x.ent==ce&&x.comp==e.target.value);if(l){scn=l.name;V=null;hl=null;render()}};
+ $("se").onchange=async e=>{const l=RL.find(x=>x.ent==e.target.value);if(l){scn=l.name;V=null;hl=null;await prepare();render();$("busy").style.display="none"}};$("sk").onchange=async e=>{const l=RL.find(x=>x.ent==ce&&x.comp==e.target.value);if(l){scn=l.name;V=null;hl=null;await prepare();render();$("busy").style.display="none"}};
  $("lgd").innerHTML=RG.map(v=>`<span><i style="background:${CO[v]};border:1px solid #999"></i>${LV[v]}</span>`).join("")+'<span><i style="border:2px solid #1f5fa8"></i>Elemento ubicado</span>';
  const all=analyze(),it=all.filter(inS),scope=B.filter(inS);
  $("mt").textContent=(scn||"Sin escenario de riesgo")+" – "+(sel.s||sel.p||sel.d||"Ámbito completo");lastIt=it;lastSc=scope;drawMap(it,scope,!keep);keep=false;
@@ -125,7 +132,7 @@ function drawMap(it,scope,rf){const W=600,H=520;it=it.filter(i=>!hideLv.has(i.lv
  ok=f=>{const w=wb(f);return w[2]>=vx0&&w[0]<=vx1&&w[3]>=vy0&&w[1]<=vy1&&((w[2]-w[0])*s>=.8||(w[3]-w[1])*s>=.8)},
  rp=r=>{let o="",lx=-1e9,ly=-1e9,n=0;for(let i=0;i<r.length;i++){const x=W/2+(mx(r[i][0])-V.cx)*s,y=H/2+(my(r[i][1])-V.cy)*s;if(Math.abs(x-lx)+Math.abs(y-ly)<1.5)continue;o+=(n?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);lx=x;ly=y;n++}return n>2?o+"Z":""},
  path=g=>polys(g).map(q=>q.map(rp).join("")).join(""),line=c=>"M"+c.map(P).join("L");
- const R=layers.find(l=>l.name==scn&&l.role=="riesgo"),rk=R&&key(R.fc.features[0].properties,/gridcode|niv|riesg|peligro|grado/i),bm=$("bm").value,cl=!!(sel.d||sel.p||sel.s);let t="";
+ const R=layers.find(l=>l.name==scn&&l.role=="riesgo"),rk=R&&lfOf(R),bm=$("bm").value,cl=!!(sel.d||sel.p||sel.s);let t="";
  if(bm){const zt=Math.max(1,Math.min(19,Math.round(V.z))),n=2**zt,ts=s/n,i0=Math.floor((V.cx-W/2/s)*n),i1=Math.floor((V.cx+W/2/s)*n),j0=Math.max(0,Math.floor((V.cy-H/2/s)*n)),j1=Math.min(n-1,Math.floor((V.cy+H/2/s)*n));
   for(let i=i0;i<=i1&&i1-i0<16;i++)for(let j=j0;j<=j1;j++){const ii=((i%n)+n)%n;t+=`<image href="${bm=="osm"?`https://tile.openstreetmap.org/${zt}/${ii}/${j}.png`:`https://mt1.google.com/vt/lyrs=s&amp;x=${ii}&amp;y=${j}&amp;z=${zt}`}" x="${X(i/n)}" y="${Y(j/n)}" width="${ts+.6}" height="${ts+.6}" preserveAspectRatio="none"/>`}}
  let o=`<rect width="${W}" height="${H}" fill="${bm?"#cfd8dc":"transparent"}"/><g id="vp">${t}`;
@@ -149,8 +156,15 @@ function exec(it,scope){const lev=sel.s?"s":sel.p?"s":sel.d?"p":"p",k=sel.p||sel
  $("eh").textContent="Prioridad de intervención – "+(k=="dis"?"distritos":"provincias")+" · "+(scn||"sin escenario");
  $("ex").innerHTML="<tr><th>"+(k=="dis"?"Distrito":"Provincia")+"</th><th>Semáforo</th><th>Elementos en riesgo alto/muy alto</th><th>Intervienen</th></tr>"+rows.map(([n,v])=>{const r=v.s/mx,t=r>=.6?["Rojo – crítico","#c62828"]:r>=.3?["Naranja – alto","#ef6c00"]:v.s>0?["Ámbar – vigilancia","#b88700"]:["Verde – normal","#43a047"],ls=Object.entries(v.L).sort((a,b)=>b[1]-a[1]);
   return`<tr><td>${n}</td><td><span class="pill" style="background:${t[1]}">${t[0]}</span></td><td>${ls.map(([a,b])=>a+": "+b).join(" · ")||"—"}</td><td>${r>=.3?[...new Set(ls.map(l=>GER(l[0])))].join(", "):"Monitoreo"}</td></tr>`}).join("")}
-function panel(){$("lt").innerHTML="<tr><th>Capa</th><th>Entidades</th><th>Rol</th><th>Etiqueta</th><th></th></tr>"+layers.map((l,i)=>`<tr><td>${l.name}${l.demo?" (demo)":""}${l.role=="riesgo"?` <small class="mu">· ${l.ent} / ${l.comp}</small>`:""}</td><td>${l.fc.features.length}</td><td><select data-i="${i}">${["limite","riesgo","expuesto"].map(r=>`<option ${r==l.role?"selected":""}>${r}</option>`).join("")}</select></td><td>${l.role=="expuesto"?`<select data-lab="${i}">${fieldsOf(l).map(k=>`<option ${k==l.lab?"selected":""}>${k}</option>`).join("")}</select>`:"—"}</td><td><button class="b" data-x="${i}">✕</button></td></tr>`).join("");
- $("lt").querySelectorAll("select[data-lab]").forEach(s=>s.onchange=()=>setLab(layers[s.dataset.lab],s.value));$("lt").querySelectorAll("select[data-i]").forEach(s=>s.onchange=()=>{layers[s.dataset.i].role=s.value;dbPut(layers[s.dataset.i]);build();panel()});$("lt").querySelectorAll("button").forEach(b=>b.onclick=()=>{const x=layers.splice(b.dataset.x,1)[0];if(x&&x.id)dbDel(x.id);build();panel()});
+function cfg(l,i){const op=(a,v)=>a.map(k=>`<option ${k==v?"selected":""}>${esc(k)}</option>`).join("");
+ if(l.role=="riesgo")return `<input type="text" data-e="${i}" value="${esc(l.ent||"")}" size="9" placeholder="Entidad"> <input type="text" data-c="${i}" value="${esc(l.comp||"")}" size="15" placeholder="Componente"> <small class="mu">nivel:</small><select data-lf="${i}">${op(fieldsOf(l),lfOf(l))}</select><select data-ns="${i}"><option value="4" ${nsOf(l)==4?"selected":""}>4 niveles</option><option value="5" ${nsOf(l)==5?"selected":""}>5 niveles</option></select>`;
+ if(l.role=="expuesto")return `<small class="mu">etiqueta:</small><select data-lab="${i}">${op(fieldsOf(l),l.lab)}</select>`;return "—"}
+function panel(){$("lt").innerHTML="<tr><th>Capa</th><th>Entidades</th><th>Rol</th><th>Configuración</th><th></th></tr>"+layers.map((l,i)=>`<tr><td>${l.name}${l.demo?" (demo)":""}</td><td>${l.fc.features.length}</td><td><select data-i="${i}">${["limite","riesgo","expuesto"].map(r=>`<option ${r==l.role?"selected":""}>${r}</option>`).join("")}</select></td><td>${cfg(l,i)}</td><td><button class="b" data-x="${i}">✕</button></td></tr>`).join("");
+ $("lt").querySelectorAll("select[data-lab]").forEach(s=>s.onchange=()=>setLab(layers[s.dataset.lab],s.value));
+ $("lt").querySelectorAll("input[data-e]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.e];l.ent=s.value.trim()||"Otra";dbPut(l);render();panel()});
+ $("lt").querySelectorAll("input[data-c]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.c];l.comp=s.value.trim()||"Escenario";dbPut(l);render();panel()});
+ $("lt").querySelectorAll("select[data-lf]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.lf];l.lf=s.value;dbPut(l);rebuild()});
+ $("lt").querySelectorAll("select[data-ns]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.ns];l.ns=+s.value;dbPut(l);rebuild()});$("lt").querySelectorAll("select[data-i]").forEach(s=>s.onchange=()=>{layers[s.dataset.i].role=s.value;dbPut(layers[s.dataset.i]);rebuild()});$("lt").querySelectorAll("button").forEach(b=>b.onclick=()=>{const x=layers.splice(b.dataset.x,1)[0];if(x&&x.id)dbDel(x.id);rebuild()});
  }
 function demo(){layers=[];const PN={"San Ignacio":[0,0],"Jaén":[1,0],"Cutervo":[2,0],"Santa Cruz":[0,1],"Chota":[1,1],"San Miguel":[0,2],"Hualgayoc":[1,2],"Celendín":[2,2],"San Pablo":[0,3],"Cajamarca":[1,3],"San Marcos":[2,3],"Contumazá":[0,4],"Cajabamba":[2,4]};
  const X0=-79,Y1=-4.3,w=.5,h=.68,sq=(a,b,c,d)=>({type:"Polygon",coordinates:[[[a,b],[c,b],[c,d],[a,d],[a,b]]]}),bf=[];
@@ -161,11 +175,12 @@ function demo(){layers=[];const PN={"San Ignacio":[0,0],"Jaén":[1,0],"Cutervo":
  pts("Centros educativos",420,"I.E. N°");pts("Establecimientos de salud",90,"P.S.");
  const v=[];for(let i=0;i<70;i++){const a=X0+rn()*1.4,b=Y1-rn()*3.3;v.push({type:"Feature",properties:{NOMBRE:"Vía "+(i+1)},geometry:{type:"LineString",coordinates:[[a,b],[a+.08*rn(),b-.1*rn()]]}})}addLayer("Red vial",{features:v},1)}
 let pend=null;const msg=t=>$("ms").textContent=t;
-async function load(files,cfg){let n=0;for(const f of files){if(!/\.(geo)?json$/i.test(f.name))continue;try{const c=layers.length;addLayer(f.name.replace(/\.\w+$/,""),JSON.parse(await f.text()));if(layers.length>c){n++;const l=layers[layers.length-1];l.id=Date.now()+"_"+Math.random().toString(36).slice(2);if(cfg&&cfg.role){l.role=cfg.role;if(cfg.ent){l.ent=cfg.ent;l.comp=cfg.comp;scn=l.name}}dbPut(l)}}catch(e){}}
- if(n)layers=layers.filter(l=>!l.demo);build();panel();msg(n?"✓ "+n+" capa(s) cargada(s). Ve a «Mapa y análisis».":"✗ No se cargó ninguna capa (¿es GeoJSON?)")}
+async function load(files,cfg){let n=0;$("busy").style.display="block";$("busy").textContent="Leyendo archivos…";await new Promise(z=>setTimeout(z));for(const f of files){if(!/\.(geo)?json$/i.test(f.name))continue;try{const c=layers.length;addLayer(f.name.replace(/\.\w+$/,""),JSON.parse(await f.text()));if(layers.length>c){n++;const l=layers[layers.length-1];l.id=Date.now()+"_"+Math.random().toString(36).slice(2);if(cfg&&cfg.role){l.role=cfg.role;if(cfg.ent){l.ent=cfg.ent;l.comp=cfg.comp;scn=l.name}}dbPut(l)}}catch(e){}}
+ if(n)layers=layers.filter(l=>!l.demo);await rebuild();msg(n?"✓ "+n+" capa(s) cargada(s). Ve a «Mapa y análisis».":"✗ No se cargó ninguna capa (¿es GeoJSON?)")}
 document.querySelectorAll("[data-ld]").forEach(b=>b.onclick=()=>{pend=b.dataset;$("fx").value="";$("fx").click()});$("fx").onchange=e=>load(e.target.files,pend);
+$("ob").onclick=()=>{pend={role:"riesgo",ent:$("oe").value.trim()||"Otra",comp:$("oc").value.trim()||"Escenario"};$("fx").value="";$("fx").click()};
 $("fdb").onclick=()=>{pend={role:"expuesto"};$("fd").value="";$("fd").click()};$("fd").onchange=e=>load(e.target.files,pend);
-$("cl").onclick=()=>{layers=[];dbClear();build();panel()};$("dm").onclick=()=>{demo();dbClear();build();panel()};
+$("cl").onclick=()=>{layers=[];dbClear();rebuild()};$("dm").onclick=()=>{demo();dbClear();rebuild()};
 
 $("sd").onchange=e=>{sel={d:e.target.value,p:"",s:""};hl=null;render()};$("sp").onchange=e=>{sel.p=e.target.value;sel.s="";hl=null;render()};$("ss").onchange=e=>{sel.s=e.target.value;hl=null;render()};
 $("rs").onclick=()=>{sel={d:"",p:"",s:""};open=null;hl=null;const r=layers.find(l=>l.role=="riesgo");scn=r?r.name:"";render()};
@@ -182,9 +197,9 @@ demo();build();panel();
 const boot=async()=>{let crash=false;try{crash=localStorage.getItem("boot")=="1";localStorage.setItem("boot","1")}catch(e){}
  const done=()=>{try{localStorage.removeItem("boot")}catch(e){}};
  if(crash){msg("⚠ La sesión anterior se cerró mientras cargaba. Las capas guardadas NO se restauraron: pulsa «Restaurar guardadas».");done();return}
- const a=await dbAll();if(a.length){layers=a;build();panel();msg("✓ "+a.length+" capa(s) restauradas del navegador");done();return}
+ const a=await dbAll();if(a.length){layers=a;await rebuild();msg("✓ "+a.length+" capa(s) restauradas del navegador");done();return}
  const m=await fetch("capas/manifest.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
- if(m&&m.items&&m.items.length){layers=[];for(const it of m.items){try{const fc=await(await fetch(it.url)).json(),c=layers.length;addLayer(it.name,fc);if(layers.length>c){const l=layers[layers.length-1];l.role=it.role;if(it.ent){l.ent=it.ent;l.comp=it.comp}}}catch(e){}}build();panel();msg("✓ Capas cargadas desde el repositorio ("+layers.length+")")}done()};
-$("rg").onclick=async()=>{const a=await dbAll();if(a.length){layers=a;build();panel();msg("✓ "+a.length+" capa(s) restauradas")}else msg("No hay capas guardadas")};
+ if(m&&m.items&&m.items.length){layers=[];for(const it of m.items){try{const fc=await(await fetch(it.url)).json(),c=layers.length;addLayer(it.name,fc);if(layers.length>c){const l=layers[layers.length-1];l.role=it.role;if(it.ent){l.ent=it.ent;l.comp=it.comp}}}catch(e){}}await rebuild();msg("✓ Capas cargadas desde el repositorio ("+layers.length+")")}done()};
+$("rg").onclick=async()=>{const a=await dbAll();if(a.length){layers=a;await rebuild();msg("✓ "+a.length+" capa(s) restauradas")}else msg("No hay capas guardadas")};
 boot();
 </script></body></html>
