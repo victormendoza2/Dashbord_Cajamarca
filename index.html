@@ -24,7 +24,7 @@ tr.cl{cursor:pointer}tr.cl:hover{background:var(--bg)}
 .note{border:1px dashed var(--bd);padding:10px;border-radius:8px;color:var(--mu);font-size:12px}
 .row{display:flex;gap:8px;margin:6px 0;flex-wrap:wrap}.row input{flex:1;min-width:220px}
 svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;border-radius:6px;overflow-x:auto;font-size:12px}.ld{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}.ld .b{text-align:center;padding:10px}.st{font-weight:700;color:var(--ac)}</style></head><body>
-<header><h1>Dashboard de Gestión de Riesgos – Cajamarca</h1><small>Escenarios CENEPRED · Lluvias intensas SENAMHI · Capas del Gobierno Regional</small></header>
+<header><h1>Dashboard de Gestión de Riesgos – Cajamarca</h1><small>Escenarios CENEPRED · Avisos SENAMHI · Elementos expuestos</small><br><small>Elaborado por Victor Enrique Mendoza Astopilco – Especialista en SIG</small></header>
 <div class="tabs"><button class="tab on" data-t="a">Mapa y análisis</button><button class="tab" data-t="b">Módulo ejecutivo (semáforo)</button><button class="tab" data-t="c">Capas y fuentes</button></div>
 <main>
 <div id="bar" class="bar">
@@ -32,11 +32,11 @@ svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;borde
 <select id="se"></select><select id="sk"></select><select id="bm"><option value="">Sin mapa base</option><option value="osm">Base: OpenStreetMap</option><option value="sat">Base: Google Satélite</option></select><button class="b rs" id="rs">✕ Limpiar selección</button></div>
 
 <section id="a"><div class="grid">
-<div class="card"><h2 id="mt"></h2><div class="row" style="margin:0 0 6px"><button class="b" id="zi">＋</button><button class="b" id="zo">－</button><button class="b" id="zh">⌂ Ajustar</button><label class="mu">Tamaño de punto <input type="range" id="ps" min="1" max="8" value="3"></label></div><svg id="map" viewBox="0 0 600 520" width="100%" style="max-height:560px"></svg>
-<div class="lg" id="lgd"></div><small class="mu">Mapas base: se ven al abrir este archivo en tu PC o servidor (la vista previa de Claude bloquea teselas externas). Rueda = zoom, arrastrar = mover.</small></div>
+<div class="card"><h2 id="mt"></h2><div class="row" style="margin:0 0 6px"><button class="b" id="zi">＋</button><button class="b" id="zo">－</button><button class="b" id="zh">⌂ Ajustar</button><label class="mu">Tamaño de punto <input type="range" id="ps" min="1" max="8" value="3"></label><button class="b" id="rk">👁 Mapa de riesgo: ON</button></div><svg id="map" viewBox="0 0 600 520" width="100%" style="max-height:560px"></svg>
+<div class="lg" id="lgd"></div></div>
 <div><div class="card"><h2>Elementos expuestos (todas las capas analizadas)</h2><div class="kpis" id="kp"></div><div class="ov"><table id="tb"></table></div><small class="mu">Clic en una capa para abrir su tabla y ubicar elementos en el mapa.</small></div></div>
 </div>
-<div class="card hide" id="dt"><h2 id="dh"></h2><div class="bar"><select id="df"></select><small class="mu">Etiqueta:</small><select id="dlab"></select></div><div class="ov"><table id="dtb"></table></div></div>
+<div class="card hide" id="dt"><h2 id="dh"></h2><div class="bar"><select id="df"></select><small class="mu">Etiqueta:</small><select id="dlab"></select><button class="b" id="dx">✕ Cerrar tabla y mostrar todas las capas</button></div><div class="ov"><table id="dtb"></table></div></div>
 </section>
 
 <section id="b" class="hide"><div class="card"><h2 id="eh">Prioridad de intervención inmediata</h2><div class="ov" style="max-height:none"><table id="ex"></table></div></div></section>
@@ -84,7 +84,7 @@ const nmL=(l,f)=>{const v=l.lab&&f.properties?f.properties[l.lab]:null;return v!
 const fieldsOf=l=>[...new Set(l.fc.features.slice(0,300).flatMap(f=>Object.keys(f.properties||{})))],
 setLab=(l,v)=>{l.lab=v;dbPut(l);Object.values(cache).forEach(a=>a.forEach(i=>{if(i.l==l.name)i.nm=nmL(l,i.f)}));render();panel()};
 const nm=p=>{const k=key(p,/^(nombre|name|nom_|cen_edu|nom)/i);return k?p[k]:Object.values(p||{}).find(v=>typeof v=="string")||"s/n"};
-let hideLv=new Set(),hideL=new Set(),psz=3,lastN=0;
+let hideLv=new Set(),hideL=new Set(),psz=3,lastN=0,showRisk=true;
 const DB=()=>new Promise((ok,ko)=>{const r=indexedDB.open("riesgos",1);r.onupgradeneeded=()=>r.result.createObjectStore("l",{keyPath:"id"});r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)});
 const dbDo=async(m,f)=>{try{const d=await DB();return await new Promise((ok,ko)=>{const t=d.transaction("l",m),q=f(t.objectStore("l"));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>ko(t.error)})}catch(e){return null}};
 const dbPut=l=>dbDo("readwrite",o=>o.put({id:l.id,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns,fc:l.fc})),dbDel=id=>dbDo("readwrite",o=>o.delete(id)),dbClear=()=>dbDo("readwrite",o=>o.clear()),dbAll=async()=>(await dbDo("readonly",o=>o.getAll()))||[];
@@ -117,8 +117,8 @@ function render(){setScale();const has=B.length>0;
  $("mt").textContent=(scn||"Sin escenario de riesgo")+" – "+(sel.s||sel.p||sel.d||"Ámbito completo");lastIt=it;lastSc=scope;drawMap(it,scope,!keep);keep=false;
  const ex=uniq(it.map(i=>i.l)),cnt=l=>RG.map(v=>it.filter(i=>i.l==l&&i.lv==v).length);
  $("kp").innerHTML=[["Elementos analizados",it.length],[LV[N],it.filter(i=>i.lv==N).length],[LV[N-1],it.filter(i=>i.lv==N-1).length]].map(k=>`<div class="k"><small>${k[0]}</small><b>${k[1].toLocaleString()}</b></div>`).join("");
- $("tb").innerHTML="<tr><th>Capa</th>"+RG.map(v=>`<th style="color:${CO[v]}">${LV[v]}</th>`).join("")+"<th>Total</th></tr>"+(ex.map(l=>`<tr class="cl" data-l="${l}"><td>▸ ${l}</td>${cnt(l).map(c=>`<td>${c}</td>`).join("")}<td>${it.filter(i=>i.l==l).length}</td></tr>`).join("")||"<tr><td>Sin capas de elementos expuestos</td></tr>");
- $("tb").querySelectorAll("tr.cl").forEach(r=>r.onclick=()=>{open=r.dataset.l;detail(it)});detail(it);exec(it,scope)}
+ $("tb").innerHTML="<tr><th>Capa</th>"+RG.map(v=>`<th style="color:${CO[v]}">${LV[v]}</th>`).join("")+"<th>Total</th></tr>"+(ex.map(l=>`<tr class="cl" data-l="${l}" ${l==open?'style="background:var(--bg);font-weight:700"':""}><td>▸ ${l}</td>${cnt(l).map(c=>`<td>${c}</td>`).join("")}<td>${it.filter(i=>i.l==l).length}</td></tr>`).join("")||"<tr><td>Sin capas de elementos expuestos</td></tr>");
+ $("tb").querySelectorAll("tr.cl").forEach(r=>r.onclick=()=>{open=open==r.dataset.l?null:r.dataset.l;hl=null;keep=true;render()});detail(it);exec(it,scope)}
 function flt(it){const ls=uniq(it.map(i=>i.l));
  $("flt").innerHTML='<small class="mu">Mostrar:</small>'+[...RG].reverse().concat(0).map(v=>`<label style="font-size:12px"><input type="checkbox" data-v="${v}" ${hideLv.has(v)?"":"checked"}> <i style="display:inline-block;width:10px;height:10px;background:${CO[v]||"#9aa5b1"};border:1px solid #999"></i>${LV[v]||"Sin dato"}</label>`).join(" ")+(ls.length>1?" | "+ls.map(l=>`<label style="font-size:12px"><input type="checkbox" data-l="${l}" ${hideL.has(l)?"":"checked"}> ${l}</label>`).join(" "):"");
  $("flt").querySelectorAll("input").forEach(c=>c.onchange=()=>{const S=c.dataset.v!=null?hideLv:hideL,k=c.dataset.v!=null?+c.dataset.v:c.dataset.l;c.checked?S.delete(k):S.add(k);drawMap(lastIt,lastSc,false)})}
@@ -128,7 +128,7 @@ function detail(it){$("dt").classList.toggle("hide",!open);if(!open)return;$("dh
  $("dtb").innerHTML="<tr><th>Nombre</th><th>Provincia</th><th>Distrito</th><th>Nivel</th><th></th></tr>"+rows.map((r,i)=>`<tr><td>${esc(r.nm)}</td><td>${r.pro}</td><td>${r.dis}</td><td><span class="pill" style="background:${CO[r.lv]||"#888"}">${LV[r.lv]||"Sin riesgo"}</span></td><td><button class="b" data-i="${i}">📍 Ubicar</button></td></tr>`).join("");
  $("dtb").querySelectorAll("button").forEach(b=>b.onclick=()=>{hl=rows[b.dataset.i];V={cx:mx(hl.pt[0]),cy:my(hl.pt[1]),z:14};keep=true;render();$("map").scrollIntoView({behavior:"smooth",block:"center"})})}
 let tf={x:0,y:0,k:1};
-function drawMap(it,scope,rf){const W=600,H=520;it=it.filter(i=>!hideLv.has(i.lv)&&!hideL.has(i.l));tf={x:0,y:0,k:1};
+function drawMap(it,scope,rf){const W=600,H=520;it=it.filter(i=>!hideLv.has(i.lv)&&!hideL.has(i.l)&&(!open||i.l==open));tf={x:0,y:0,k:1};
  if(rf||!V){const ext=scope.length?scope.map(u=>bb(u.f)):(layers.length?layers.flatMap(l=>l.fc.features.slice(0,2000)).map(bb):[[-79,-7,-78,-6]]),
   a=Math.min(...ext.map(e=>mx(e[0]))),c=Math.max(...ext.map(e=>mx(e[2]))),b=Math.min(...ext.map(e=>my(e[3]))),d=Math.max(...ext.map(e=>my(e[1])));
   V={cx:(a+c)/2,cy:(b+d)/2,z:Math.max(1,Math.min(17,Math.log2(Math.min((W-30)/((c-a)*TW||1),(H-30)/((d-b)*TW||1)))))}}
@@ -144,7 +144,7 @@ function drawMap(it,scope,rf){const W=600,H=520;it=it.filter(i=>!hideLv.has(i.lv
  let o=`<rect width="${W}" height="${H}" fill="${bm?"#cfd8dc":"transparent"}"/><g id="vp">${t}`;
  if(cl)o+=`<defs><clipPath id="cp">${scope.filter(u=>ok(u.f)).map(u=>`<path d="${path(u.f.geometry)}"/>`).join("")}</clipPath></defs>`;
  o+=`<path d="${B.filter(u=>ok(u.f)).map(u=>path(u.f.geometry)).join("")}" fill="none" stroke="#9aa5b1" stroke-width=".6"/>`;
- if(R){const gp={};R.fc.features.filter(ok).forEach(f=>{const v=lvl(f.properties[rk]);gp[v]=(gp[v]||"")+path(f.geometry)});o+=`<g ${cl?'clip-path="url(#cp)"':""}>`+Object.entries(gp).map(([v,d])=>`<path d="${d}" fill="${CO[v]||"#9aa5b1"}" fill-opacity="${bm?.6:.8}"/>`).join("")+"</g>"}
+ if(R&&showRisk){const gp={};R.fc.features.filter(ok).forEach(f=>{const v=lvl(f.properties[rk]);gp[v]=(gp[v]||"")+path(f.geometry)});o+=`<g ${cl?'clip-path="url(#cp)"':""}>`+Object.entries(gp).map(([v,d])=>`<path d="${d}" fill="${CO[v]||"#9aa5b1"}" fill-opacity="${bm?.6:.8}"/>`).join("")+"</g>"}
  if(cl)o+=`<path d="${scope.filter(u=>ok(u.f)).map(u=>path(u.f.geometry)).join("")}" fill="none" stroke="${bm=="sat"?"#fff":"#18222d"}" stroke-width="${sel.s||sel.p?2.2:1.5}"/>`;
  const rr=psz*Math.max(.35,Math.min(1.6,.35+(V.z-7)*.12)),dp={},dl={},dg={},fx=c=>c=="#ffffff"?"#b0bec5":c;
  it.forEach(i=>{const g=i.f.geometry,w=[mx(i.pt[0]),my(i.pt[1])];if(w[0]<vx0||w[0]>vx1||w[1]<vy0||w[1]>vy1)return;const v=i.lv;
@@ -197,22 +197,27 @@ const dz=(f,p)=>{if(!V)return;p=p||[300,260];tf.x=p[0]-(p[0]-tf.x)*f;tf.y=p[1]-(
 mp.onpointerdown=e=>{dr=pk(e);mp.setPointerCapture(e.pointerId)};mp.onpointerup=()=>{if(dr){dr=null;cm()}};
 mp.onpointermove=e=>{if(!dr||!V)return;const p=pk(e);tf.x+=p[0]-dr[0];tf.y+=p[1]-dr[1];dr=p;ap()};
 mp.onwheel=e=>{e.preventDefault();dz(e.deltaY<0?1.41:.71,pk(e))};
-$("zi").onclick=()=>dz(2);$("zo").onclick=()=>dz(.5);$("zh").onclick=()=>drawMap(lastIt,lastSc,true);$("bm").onchange=()=>drawMap(lastIt,lastSc,false);$("ps").oninput=()=>{psz=+$("ps").value;drawMap(lastIt,lastSc,false)};
+$("zi").onclick=()=>dz(2);$("zo").onclick=()=>dz(.5);$("zh").onclick=()=>drawMap(lastIt,lastSc,true);$("bm").onchange=()=>drawMap(lastIt,lastSc,false);$("rk").onclick=()=>{showRisk=!showRisk;$("rk").textContent="👁 Mapa de riesgo: "+(showRisk?"ON":"OFF");drawMap(lastIt,lastSc,false)};$("dx").onclick=()=>{open=null;hl=null;keep=true;render()};
+$("ps").oninput=()=>{psz=+$("ps").value;drawMap(lastIt,lastSc,false)};
 demo();build();panel();
 const LECT=new URLSearchParams(location.search).get("modo")=="lectura";
 const sm=t=>$("sm").textContent=t,toast=(t,ms)=>{const z=$("busy");z.style.display="block";z.textContent=t;if(ms)setTimeout(()=>z.style.display="none",ms)},ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||"";v===null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){return ""}};
 const gz=async s=>{const b=new Uint8Array(await new Response(new Blob([s]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer());let t="";for(let i=0;i<b.length;i+=32768)t+=String.fromCharCode.apply(null,b.subarray(i,i+32768));return btoa(t)},
 gunz=async b64=>{const t=atob(b64),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i);return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).text()};
 const enlace=id=>location.origin+location.pathname+"?modo=lectura&g="+id;if(ls("gid"))$("lk").value=enlace(ls("gid"));$("tk").value=ls("gtok")?"••••••••••••••••":"";
-$("tks").onclick=()=>{const t=$("tk").value.trim();if(t&&!/^•+$/.test(t)){ls("gtok",t);$("tk").value="••••••••••••••••";sm("✓ Token guardado en este navegador")}else sm("Pega primero el token")};
+async function guardaToken(t){sm("Verificando token…");try{const r=await fetch("https://api.github.com/user",{headers:{Authorization:"Bearer "+t,Accept:"application/vnd.github+json"}});
+ if(r.status==401){sm("✗ GitHub no aceptó el token (inválido o vencido). Pulsa «Crear token», cópialo completo y pégalo aquí.");return false}
+ ls("gtok",t);$("tk").value="••••••••••••••••";const sc=r.headers.get("x-oauth-scopes")||"",u=r.ok?(await r.json()).login:"";sm("✓ Token válido"+(u?" (usuario "+u+")":"")+(sc&&!/gist/.test(sc)?" ⚠ pero no tiene el permiso «gist»":""));return true}catch(e){sm("✗ "+e.message);return false}}
+$("tks").onclick=()=>{const t=$("tk").value.trim();if(!t||/^•+$/.test(t))return sm("Pega primero el token");guardaToken(t)};
 $("cp").onclick=()=>{const k=$("lk");if(!k.value)return;k.select();try{navigator.clipboard.writeText(k.value)}catch(e){document.execCommand("copy")}sm("✓ Enlace copiado")};
 const GH=()=>({Authorization:"Bearer "+ls("gtok"),Accept:"application/vnd.github+json","Content-Type":"application/json"});
-$("sh").onclick=async()=>{try{const L=layers.filter(l=>!l.demo);if(!L.length)return sm("✗ No hay capas reales cargadas");if(!ls("gtok"))return sm("✗ Falta el token de GitHub (permiso gist)");
+$("sh").onclick=async()=>{try{const L=layers.filter(l=>!l.demo);if(!L.length)return sm("✗ No hay capas reales cargadas");const nt=$("tk").value.trim();if(nt&&!/^•+$/.test(nt)&&!await guardaToken(nt))return;if(!ls("gtok"))return sm("✗ Falta el token de GitHub (permiso gist)");
+ sm("Verificando token…");{const rv=await fetch("https://api.github.com/user",{headers:GH()});if(rv.status==401)return sm("✗ El token guardado no es válido o venció. Crea uno nuevo, pégalo y vuelve a intentar.")}
  sm("Comprimiendo…");await new Promise(z=>setTimeout(z));const files={},items=[],used=new Set();
  for(const l of L){let fn=(l.name||"capa").replace(/[^\w\-]+/g,"_");while(used.has(fn))fn+="_";used.add(fn);
   const js=JSON.stringify({type:"FeatureCollection",features:l.fc.features.map(f=>({type:"Feature",properties:f.properties,geometry:f.geometry}))});let name=fn+".geojson",content=js;try{content=await gz(js);name=fn+".gz.b64"}catch(e){}
   files[name]={content};items.push({file:name,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns})}
- files["manifest.json"]={content:JSON.stringify({items})};let gid=ls("gid"),r;sm("Subiendo a GitHub…");
+ files["manifest.json"]={content:JSON.stringify({items})};let gid=ls("gid"),r;sm("Subiendo "+(Object.values(files).reduce((a,f)=>a+f.content.length,0)/1e6).toFixed(1)+" MB a GitHub… (puede tardar un poco)");
  if(gid){const cur=await fetch("https://api.github.com/gists/"+gid,{headers:GH()});if(cur.ok){const cj=await cur.json();for(const k of Object.keys(cj.files))if(!files[k])files[k]=null;r=await fetch("https://api.github.com/gists/"+gid,{method:"PATCH",headers:GH(),body:JSON.stringify({files})})}else gid=""}
  if(!gid)r=await fetch("https://api.github.com/gists",{method:"POST",headers:GH(),body:JSON.stringify({description:"Dashboard de riesgos – capas compartidas",public:false,files})});
  if(!r.ok){let t="";try{t=(await r.json()).message}catch(e){}return sm("✗ GitHub respondió "+r.status+(t?": "+t:""))}
