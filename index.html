@@ -54,6 +54,12 @@ svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;borde
 <input type="file" id="fx" multiple accept=".geojson,.json" class="hide"><input type="file" id="fd" webkitdirectory class="hide">
 <div class="row" style="margin-top:10px"><button class="b" id="fdb">📁 Cargar carpeta completa de elementos expuestos (GORE)</button><span id="ms" class="mu"></span></div>
 <p class="mu">Elementos expuestos: colegios, salud, vías, parcelas… en GeoJSON. Puedes subir los que quieras: el análisis usa todas las capas cargadas.</p></div>
+<div class="card"><h2>Compartir con un solo enlace</h2>
+<p class="mu">Cargas tus capas aquí y compartes <b>un único enlace</b>: quien lo abra las ve sin cargar nada. Si vuelves a compartir, el enlace es el mismo y se actualiza solo. Las capas se guardan comprimidas en un Gist <i>secreto</i> de tu cuenta de GitHub (no se agrega nada a tu repositorio).</p>
+<div class="row"><input type="password" id="tk" size="34" placeholder="Token de GitHub (permiso gist)"><button class="b" id="tks">Guardar token</button><a class="b" target="_blank" rel="noopener" href="https://github.com/settings/tokens/new?scopes=gist&description=Dashboard%20riesgos">Crear token</a></div>
+<div class="row"><button class="b" id="sh">🔗 Compartir capas</button><button class="b rs" id="sx">Dejar de compartir</button><span id="sm" class="mu"></span></div>
+<div class="row"><input type="text" id="lk" readonly size="62" placeholder="Aquí aparece el enlace para compartir"><button class="b" id="cp">Copiar</button></div>
+<small class="mu">El token solo necesita el permiso «gist» y se guarda en este navegador. Cualquiera que tenga el enlace puede ver las capas (no aparece en búsquedas, pero tampoco tiene contraseña).</small></div>
 <div class="card"><h2>Capas cargadas</h2><div class="ov"><table id="lt"></table></div><div class="row"><button class="b" id="rg">Restaurar guardadas</button><button class="b" id="dm">Restaurar demo</button><button class="b rs" id="cl">Quitar todas</button></div></div></section>
 </main>
 <div id="busy" style="display:none;position:fixed;right:12px;bottom:12px;background:var(--ac);color:#fff;padding:8px 12px;border-radius:8px;z-index:9"></div>
@@ -140,13 +146,12 @@ function drawMap(it,scope,rf){const W=600,H=520;it=it.filter(i=>!hideLv.has(i.lv
  o+=`<path d="${B.filter(u=>ok(u.f)).map(u=>path(u.f.geometry)).join("")}" fill="none" stroke="#9aa5b1" stroke-width=".6"/>`;
  if(R){const gp={};R.fc.features.filter(ok).forEach(f=>{const v=lvl(f.properties[rk]);gp[v]=(gp[v]||"")+path(f.geometry)});o+=`<g ${cl?'clip-path="url(#cp)"':""}>`+Object.entries(gp).map(([v,d])=>`<path d="${d}" fill="${CO[v]||"#9aa5b1"}" fill-opacity="${bm?.6:.8}"/>`).join("")+"</g>"}
  if(cl)o+=`<path d="${scope.filter(u=>ok(u.f)).map(u=>path(u.f.geometry)).join("")}" fill="none" stroke="${bm=="sat"?"#fff":"#18222d"}" stroke-width="${sel.s||sel.p?2.2:1.5}"/>`;
- const rr=psz*Math.max(.35,Math.min(1.6,.35+(V.z-7)*.12)),dp={},dl={},dg={},lb=[],fx=c=>c=="#ffffff"?"#b0bec5":c;
+ const rr=psz*Math.max(.35,Math.min(1.6,.35+(V.z-7)*.12)),dp={},dl={},dg={},fx=c=>c=="#ffffff"?"#b0bec5":c;
  it.forEach(i=>{const g=i.f.geometry,w=[mx(i.pt[0]),my(i.pt[1])];if(w[0]<vx0||w[0]>vx1||w[1]<vy0||w[1]>vy1)return;const v=i.lv;
-  if(/Line/.test(g.type))dl[v]=(dl[v]||"")+(g.type=="LineString"?[g.coordinates]:g.coordinates).map(line).join("");else if(/Polygon/.test(g.type))dg[v]=(dg[v]||"")+path(g);else{const[x,y]=P(i.pt);dp[v]=(dp[v]||"")+"M"+x+" "+y+"h.01";lb.push([x,y,i.nm])}});
+  if(/Line/.test(g.type))dl[v]=(dl[v]||"")+(g.type=="LineString"?[g.coordinates]:g.coordinates).map(line).join("");else if(/Polygon/.test(g.type))dg[v]=(dg[v]||"")+path(g);else{const[x,y]=P(i.pt);dp[v]=(dp[v]||"")+"M"+x+" "+y+"h.01"}});
  for(const[v,d]of Object.entries(dg))o+=`<path d="${d}" fill="${fx(CO[v]||"#777")}" stroke="#333" stroke-width=".4"/>`;
  for(const[v,d]of Object.entries(dl))o+=`<path d="${d}" stroke="${fx(CO[v]||"#777")}" stroke-width="${Math.max(1,rr*.7).toFixed(1)}" fill="none"/>`;
  for(const[v,d]of Object.entries(dp))o+=`<path d="${d}" stroke="${fx(CO[v]||"#777")}" stroke-width="${(2*rr).toFixed(1)}" stroke-linecap="round" fill="none"/>`;
- if(V.z>=12.5&&lb.length&&lb.length<=150)o+=lb.map(([x,y,t])=>`<text x="${+x+6}" y="${+y-6}" font-size="11" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(t)}</text>`).join("");
  if(hl){const[x,y]=P(hl.pt);o+=`<circle cx="${x}" cy="${y}" r="13" fill="none" stroke="#1f5fa8" stroke-width="3.5"/><text x="${+x+16}" y="${+y-10}" font-size="13" font-weight="700" fill="#111" stroke="#fff" stroke-width="3.5" paint-order="stroke">${esc(hl.nm)}</text>`}
  $("map").innerHTML=o+"</g>"}
 const GER=n=>/escu|educ|ie\b|colegio/i.test(n)?"DRE Cajamarca":/salud|estab/i.test(n)?"DIRESA":/v[ií]a|carre|vial/i.test(n)?"Gerencia de Infraestructura":/parcel|agr|cultiv/i.test(n)?"Gerencia de Desarrollo Económico":"Gerencia de Gestión del Riesgo";
@@ -175,7 +180,7 @@ function demo(){layers=[];const PN={"San Ignacio":[0,0],"Jaén":[1,0],"Cutervo":
  pts("Centros educativos",420,"I.E. N°");pts("Establecimientos de salud",90,"P.S.");
  const v=[];for(let i=0;i<70;i++){const a=X0+rn()*1.4,b=Y1-rn()*3.3;v.push({type:"Feature",properties:{NOMBRE:"Vía "+(i+1)},geometry:{type:"LineString",coordinates:[[a,b],[a+.08*rn(),b-.1*rn()]]}})}addLayer("Red vial",{features:v},1)}
 let pend=null;const msg=t=>$("ms").textContent=t;
-async function load(files,cfg){let n=0;$("busy").style.display="block";$("busy").textContent="Leyendo archivos…";await new Promise(z=>setTimeout(z));for(const f of files){if(!/\.(geo)?json$/i.test(f.name))continue;try{const c=layers.length;addLayer(f.name.replace(/\.\w+$/,""),JSON.parse(await f.text()));if(layers.length>c){n++;const l=layers[layers.length-1];l.id=Date.now()+"_"+Math.random().toString(36).slice(2);if(cfg&&cfg.role){l.role=cfg.role;if(cfg.ent){l.ent=cfg.ent;l.comp=cfg.comp;scn=l.name}}dbPut(l)}}catch(e){}}
+async function load(files,cfg){let n=0;$("busy").style.display="block";$("busy").textContent="Leyendo archivos…";await new Promise(z=>setTimeout(z));for(const f of files){if(!/\.(geo)?json$/i.test(f.name))continue;try{const c=layers.length;addLayer(f.name.replace(/\.\w+$/,""),JSON.parse(await f.text()));if(layers.length>c){n++;const l=layers[layers.length-1];l.id=Date.now()+"_"+Math.random().toString(36).slice(2);const old=layers.filter(x=>x!==l&&x.name===l.name&&!x.demo);old.forEach(x=>{if(x.id)dbDel(x.id)});layers=layers.filter(x=>!old.includes(x));if(cfg&&cfg.role){l.role=cfg.role;if(cfg.ent){l.ent=cfg.ent;l.comp=cfg.comp;scn=l.name}}dbPut(l)}}catch(e){}}
  if(n)layers=layers.filter(l=>!l.demo);await rebuild();msg(n?"✓ "+n+" capa(s) cargada(s). Ve a «Mapa y análisis».":"✗ No se cargó ninguna capa (¿es GeoJSON?)")}
 document.querySelectorAll("[data-ld]").forEach(b=>b.onclick=()=>{pend=b.dataset;$("fx").value="";$("fx").click()});$("fx").onchange=e=>load(e.target.files,pend);
 $("ob").onclick=()=>{pend={role:"riesgo",ent:$("oe").value.trim()||"Otra",comp:$("oc").value.trim()||"Escenario"};$("fx").value="";$("fx").click()};
@@ -194,12 +199,36 @@ mp.onpointermove=e=>{if(!dr||!V)return;const p=pk(e);tf.x+=p[0]-dr[0];tf.y+=p[1]
 mp.onwheel=e=>{e.preventDefault();dz(e.deltaY<0?1.41:.71,pk(e))};
 $("zi").onclick=()=>dz(2);$("zo").onclick=()=>dz(.5);$("zh").onclick=()=>drawMap(lastIt,lastSc,true);$("bm").onchange=()=>drawMap(lastIt,lastSc,false);$("ps").oninput=()=>{psz=+$("ps").value;drawMap(lastIt,lastSc,false)};
 demo();build();panel();
-const boot=async()=>{let crash=false;try{crash=localStorage.getItem("boot")=="1";localStorage.setItem("boot","1")}catch(e){}
+const LECT=new URLSearchParams(location.search).get("modo")=="lectura";
+const sm=t=>$("sm").textContent=t,toast=(t,ms)=>{const z=$("busy");z.style.display="block";z.textContent=t;if(ms)setTimeout(()=>z.style.display="none",ms)},ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||"";v===null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){return ""}};
+const gz=async s=>{const b=new Uint8Array(await new Response(new Blob([s]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer());let t="";for(let i=0;i<b.length;i+=32768)t+=String.fromCharCode.apply(null,b.subarray(i,i+32768));return btoa(t)},
+gunz=async b64=>{const t=atob(b64),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i);return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).text()};
+const enlace=id=>location.origin+location.pathname+"?modo=lectura&g="+id;if(ls("gid"))$("lk").value=enlace(ls("gid"));$("tk").value=ls("gtok")?"••••••••••••••••":"";
+$("tks").onclick=()=>{const t=$("tk").value.trim();if(t&&!/^•+$/.test(t)){ls("gtok",t);$("tk").value="••••••••••••••••";sm("✓ Token guardado en este navegador")}else sm("Pega primero el token")};
+$("cp").onclick=()=>{const k=$("lk");if(!k.value)return;k.select();try{navigator.clipboard.writeText(k.value)}catch(e){document.execCommand("copy")}sm("✓ Enlace copiado")};
+const GH=()=>({Authorization:"Bearer "+ls("gtok"),Accept:"application/vnd.github+json","Content-Type":"application/json"});
+$("sh").onclick=async()=>{try{const L=layers.filter(l=>!l.demo);if(!L.length)return sm("✗ No hay capas reales cargadas");if(!ls("gtok"))return sm("✗ Falta el token de GitHub (permiso gist)");
+ sm("Comprimiendo…");await new Promise(z=>setTimeout(z));const files={},items=[],used=new Set();
+ for(const l of L){let fn=(l.name||"capa").replace(/[^\w\-]+/g,"_");while(used.has(fn))fn+="_";used.add(fn);
+  const js=JSON.stringify({type:"FeatureCollection",features:l.fc.features.map(f=>({type:"Feature",properties:f.properties,geometry:f.geometry}))});let name=fn+".geojson",content=js;try{content=await gz(js);name=fn+".gz.b64"}catch(e){}
+  files[name]={content};items.push({file:name,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns})}
+ files["manifest.json"]={content:JSON.stringify({items})};let gid=ls("gid"),r;sm("Subiendo a GitHub…");
+ if(gid){const cur=await fetch("https://api.github.com/gists/"+gid,{headers:GH()});if(cur.ok){const cj=await cur.json();for(const k of Object.keys(cj.files))if(!files[k])files[k]=null;r=await fetch("https://api.github.com/gists/"+gid,{method:"PATCH",headers:GH(),body:JSON.stringify({files})})}else gid=""}
+ if(!gid)r=await fetch("https://api.github.com/gists",{method:"POST",headers:GH(),body:JSON.stringify({description:"Dashboard de riesgos – capas compartidas",public:false,files})});
+ if(!r.ok){let t="";try{t=(await r.json()).message}catch(e){}return sm("✗ GitHub respondió "+r.status+(t?": "+t:""))}
+ const j=await r.json();ls("gid",j.id);$("lk").value=enlace(j.id);sm("✓ "+L.length+" capa(s) compartida(s). Copia el enlace.")}catch(e){sm("✗ "+e.message)}};
+$("sx").onclick=async()=>{const gid=ls("gid");if(!gid)return sm("No hay enlace activo");try{const r=await fetch("https://api.github.com/gists/"+gid,{method:"DELETE",headers:GH()});if(r.ok||r.status==404){ls("gid",null);$("lk").value="";sm("✓ Dejaste de compartir: el enlace ya no funciona")}else sm("✗ GitHub respondió "+r.status)}catch(e){sm("✗ "+e.message)}};
+async function cargarGist(id){try{toast("Descargando capas compartidas…");const r=await fetch("https://api.github.com/gists/"+id,{headers:{Accept:"application/vnd.github+json"}});if(!r.ok)throw new Error("No se pudo abrir el enlace compartido ("+r.status+")");const F=(await r.json()).files||{};
+ const txt=async f=>f.truncated||f.content==null?await(await fetch(f.raw_url)).text():f.content;if(!F["manifest.json"])throw new Error("El enlace no contiene capas");const m=JSON.parse(await txt(F["manifest.json"]));layers=[];
+ for(const it of m.items){const f=F[it.file];if(!f)continue;let t=await txt(f);if(/\.gz\.b64$/.test(it.file))t=await gunz(t);const c=layers.length;addLayer(it.name,JSON.parse(t));if(layers.length>c){const l=layers[layers.length-1];l.role=it.role;if(it.ent){l.ent=it.ent;l.comp=it.comp}if(it.lab)l.lab=it.lab;if(it.lf)l.lf=it.lf;if(it.ns)l.ns=+it.ns}}
+ await rebuild();toast("✓ "+layers.length+" capa(s) cargadas",2500)}catch(e){toast("✗ "+e.message,9000)}}
+const boot=async()=>{if(LECT)document.querySelector('.tab[data-t="c"]').classList.add("hide");let crash=false;try{crash=localStorage.getItem("boot")=="1";localStorage.setItem("boot","1")}catch(e){}
  const done=()=>{try{localStorage.removeItem("boot")}catch(e){}};
- if(crash){msg("⚠ La sesión anterior se cerró mientras cargaba. Las capas guardadas NO se restauraron: pulsa «Restaurar guardadas».");done();return}
- const a=await dbAll();if(a.length){layers=a;await rebuild();msg("✓ "+a.length+" capa(s) restauradas del navegador");done();return}
+ if(crash&&!LECT){msg("⚠ La sesión anterior se cerró mientras cargaba. Las capas guardadas NO se restauraron: pulsa «Restaurar guardadas».");done();return}
+ const gq=new URLSearchParams(location.search).get("g");if(gq){await cargarGist(gq);done();return}
+ const a=LECT?[]:await dbAll();if(a.length){layers=a;await rebuild();msg("✓ "+a.length+" capa(s) restauradas del navegador");done();return}
  const m=await fetch("capas/manifest.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
- if(m&&m.items&&m.items.length){layers=[];for(const it of m.items){try{const fc=await(await fetch(it.url)).json(),c=layers.length;addLayer(it.name,fc);if(layers.length>c){const l=layers[layers.length-1];l.role=it.role;if(it.ent){l.ent=it.ent;l.comp=it.comp}}}catch(e){}}await rebuild();msg("✓ Capas cargadas desde el repositorio ("+layers.length+")")}done()};
+ if(m&&m.items&&m.items.length){layers=[];for(const it of m.items){try{const fc=await(await fetch(it.url)).json(),c=layers.length;addLayer(it.name,fc);if(layers.length>c){const l=layers[layers.length-1];l.role=it.role;if(it.ent){l.ent=it.ent;l.comp=it.comp}if(it.lab)l.lab=it.lab;if(it.lf)l.lf=it.lf;if(it.ns)l.ns=+it.ns}}catch(e){}}await rebuild();msg("✓ Capas cargadas desde el repositorio ("+layers.length+")")}done()};
 $("rg").onclick=async()=>{const a=await dbAll();if(a.length){layers=a;await rebuild();msg("✓ "+a.length+" capa(s) restauradas")}else msg("No hay capas guardadas")};
 boot();
 </script></body></html>
