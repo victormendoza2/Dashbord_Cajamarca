@@ -84,7 +84,7 @@ const nmL=(l,f)=>{const v=l.lab&&f.properties?f.properties[l.lab]:null;return v!
 const fieldsOf=l=>[...new Set(l.fc.features.slice(0,300).flatMap(f=>Object.keys(f.properties||{})))],
 setLab=(l,v)=>{l.lab=v;dbPut(l);Object.values(cache).forEach(a=>a.forEach(i=>{if(i.l==l.name)i.nm=nmL(l,i.f)}));render();panel()};
 const nm=p=>{const k=key(p,/^(nombre|name|nom_|cen_edu|nom)/i);return k?p[k]:Object.values(p||{}).find(v=>typeof v=="string")||"s/n"};
-let hideLv=new Set(),hideL=new Set(),psz=3,lastN=0,showRisk=true;
+let hideLv=new Set(),hideL=new Set(),psz=3,lastN=0,showRisk=true,anaId=0;
 const DB=()=>new Promise((ok,ko)=>{const r=indexedDB.open("riesgos",1);r.onupgradeneeded=()=>r.result.createObjectStore("l",{keyPath:"id"});r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)});
 const dbDo=async(m,f)=>{try{const d=await DB();return await new Promise((ok,ko)=>{const t=d.transaction("l",m),q=f(t.objectStore("l"));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>ko(t.error)})}catch(e){return null}};
 const dbPut=l=>dbDo("readwrite",o=>o.put({id:l.id,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns,fc:l.fc})),dbDel=id=>dbDo("readwrite",o=>o.delete(id)),dbClear=()=>dbDo("readwrite",o=>o.clear()),dbAll=async()=>(await dbDo("readonly",o=>o.getAll()))||[];
@@ -97,11 +97,11 @@ function addLayer(name,fc,demo){const fs=(fc.features||[]).filter(f=>f.geometry)
 function build(skip){B=[];layers.filter(l=>l.role=="limite").forEach(l=>l.fc.features.forEach(f=>{const p=f.properties;B.push({f,dep:p[key(p,/^(depart|nombdep)/i)]||"",pro:p[key(p,/^(provin|nombprov)/i)]||"",dis:p[key(p,/^(distri|nombdist)/i)]||""})}));
  const r=layers.filter(l=>l.role=="riesgo");if(!r.find(l=>l.name==scn))scn=r[0]?r[0].name:"";cache={};sel={d:"",p:"",s:""};open=null;hl=null;V=null;if(!skip)render()}
 const unitOf=p=>{if(!B._g)gridOf(B,B.map(u=>u.f));const g=B._g;let a=Math.floor((p[0]-g.x0)/g.cw),d=Math.floor((p[1]-g.y0)/g.ch);if(a<0||d<0||a>g.n||d>g.n)return null;a=Math.min(a,g.n-1);d=Math.min(d,g.n-1);for(const i of g.c.get(a*g.n+d)||[])if(inF(p,B[i].f))return B[i];return null};
-function* analyzeGen(){setScale();const sc=scn,R=layers.find(l=>l.name==sc&&l.role=="riesgo"),k=R&&lfOf(R),out=[],E=layers.filter(l=>l.role=="expuesto"),tot=E.reduce((a,l)=>a+l.fc.features.length,0);let n=0;
- for(const l of E)for(const f of l.fc.features){if(++n%1000==0)yield[n,tot];const pt=rep(f.geometry);if(!pt)continue;const u=B.length?unitOf(pt):{dep:"",pro:"",dis:""};if(!u)continue;let lv=0;if(R)lv=lvAt(R,k,pt);out.push({l:l.name,f,pt,nm:nmL(l,f),dep:u.dep,pro:u.pro,dis:u.dis,lv})}
- return cache[sc]=out}
+function* analyzeGen(id){setScale();const sc=scn,R=layers.find(l=>l.name==sc&&l.role=="riesgo"),k=R&&lfOf(R),out=[],E=layers.filter(l=>l.role=="expuesto"),tot=E.reduce((a,l)=>a+l.fc.features.length,0);let n=0;
+ for(const l of E)for(const f of l.fc.features){if(++n%1000==0){if(id!==undefined&&id!==anaId)return null;yield[n,tot]}const pt=rep(f.geometry);if(!pt)continue;const u=B.length?unitOf(pt):{dep:"",pro:"",dis:""};if(!u)continue;let lv=0;if(R)lv=lvAt(R,k,pt);out.push({l:l.name,f,pt,nm:nmL(l,f),dep:u.dep,pro:u.pro,dis:u.dis,lv})}
+ if(id!==undefined&&id!==anaId)return null;return cache[sc]=out}
 function analyze(){if(cache[scn])return cache[scn];const g=analyzeGen();let r;while(!(r=g.next()).done);return r.value}
-async function prepare(){if(cache[scn])return;const g=analyzeGen(),bz=$("busy");for(;;){const r=g.next();if(r.done)break;bz.style.display="block";bz.textContent="Analizando "+r.value[0].toLocaleString()+" / "+r.value[1].toLocaleString()+" elementos…";await new Promise(z=>setTimeout(z))}}
+async function prepare(){const id=++anaId;if(cache[scn])return;const g=analyzeGen(id),bz=$("busy");for(;;){const r=g.next();if(r.done){if(r.value===null)return;break}bz.style.display="block";bz.textContent="Analizando "+r.value[0].toLocaleString()+" / "+r.value[1].toLocaleString()+" elementos…";await new Promise(z=>setTimeout(z))}}
 async function rebuild(){build(true);await prepare();render();panel();$("busy").style.display="none"}
 const inS=u=>(!sel.d||u.dep==sel.d)&&(!sel.p||u.pro==sel.p)&&(!sel.s||u.dis==sel.s);
 const uniq=a=>[...new Set(a)].sort();
