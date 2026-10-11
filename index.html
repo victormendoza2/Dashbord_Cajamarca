@@ -58,13 +58,6 @@ svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;borde
 <input type="file" id="fx" multiple accept=".geojson,.json" class="hide"><input type="file" id="fd" webkitdirectory class="hide">
 <div class="row" style="margin-top:10px"><button class="b" id="fdb">📁 Cargar carpeta completa de elementos expuestos (GORE)</button><span id="ms" class="mu"></span></div>
 <p class="mu">Elementos expuestos: colegios, salud, vías, parcelas… en GeoJSON. Puedes subir los que quieras: el análisis usa todas las capas cargadas.</p></div>
-<div class="card"><h2>Compartir con un solo enlace</h2>
-<p class="mu">Cargas tus capas aquí y compartes <b>un único enlace</b>: quien lo abra las ve sin cargar nada. Si vuelves a compartir, el enlace es el mismo y se actualiza solo. Las capas se guardan comprimidas en un Gist <i>secreto</i> de tu cuenta de GitHub (no se agrega nada a tu repositorio).</p>
-<div class="row"><input type="password" id="tk" size="34" placeholder="Token de GitHub (permiso gist)"><button class="b" id="tks">Guardar token</button><a class="b" target="_blank" rel="noopener" href="https://github.com/settings/tokens/new?scopes=gist&description=Dashboard%20riesgos">Crear token</a></div>
-<div id="shl" style="margin:6px 0"></div>
-<div class="row"><button class="b" id="sh">🔗 Compartir capas</button><button class="b rs" id="sx">Dejar de compartir</button><span id="sm" class="mu"></span></div>
-<div class="row"><input type="text" id="lk" readonly size="62" placeholder="Aquí aparece el enlace para compartir"><button class="b" id="cp">Copiar</button></div>
-<small class="mu">El token solo necesita el permiso «gist» y se guarda en este navegador. Cualquiera que tenga el enlace puede ver las capas (no aparece en búsquedas, pero tampoco tiene contraseña).</small></div>
 <div class="card"><h2>Capas cargadas</h2><div class="ov"><table id="lt"></table></div><div class="row"><button class="b" id="rg">Restaurar guardadas</button><button class="b" id="dm">Restaurar demo</button><button class="b rs" id="cl">Quitar todas</button></div></div></section>
 </main>
 <div id="busy" style="display:none;position:fixed;right:12px;bottom:12px;background:var(--ac);color:#fff;padding:8px 12px;border-radius:8px;z-index:9"></div>
@@ -81,7 +74,12 @@ const polys=g=>!g?[]:g.type=="Polygon"?[g.coordinates]:g.type=="MultiPolygon"?g.
 const flat=g=>g.type=="Point"?[g.coordinates]:g.type=="MultiPoint"||g.type=="LineString"?g.coordinates:g.type=="MultiLineString"?g.coordinates.flat():polys(g).flat(2).length?polys(g).map(p=>p[0]).flat():[];
 function bb(f){if(f._b)return f._b;const c=flat(f.geometry);let a=1e9,b=1e9,x=-1e9,y=-1e9;c.forEach(([u,v])=>{a=Math.min(a,u);x=Math.max(x,u);b=Math.min(b,v);y=Math.max(y,v)});return f._b=[a,b,x,y]}
 function rep(g){const c=flat(g);if(g.type.includes("Point"))return c[0];if(g.type.includes("Line"))return c[c.length>>1];const n=c.length;return[c.reduce((a,p)=>a+p[0],0)/n,c.reduce((a,p)=>a+p[1],0)/n]}
-function ring(p,r){let i=false;for(let a=0,b=r.length-1;a<r.length;b=a++)if((r[a][1]>p[1])!=(r[b][1]>p[1])&&p[0]<(r[b][0]-r[a][0])*(p[1]-r[a][1])/(r[b][1]-r[a][1])+r[a][0])i=!i;return i}
+const RS=new WeakMap();
+function slabs(r){let s=RS.get(r);if(s)return s;let y0=1e9,y1=-1e9;for(const v of r){if(v[1]<y0)y0=v[1];if(v[1]>y1)y1=v[1]}const K=Math.max(8,Math.min(1024,r.length>>3)),h=(y1-y0)/K||1,L=Array.from({length:K},()=>[]);
+ for(let a=0,b=r.length-1;a<r.length;b=a++){const ya=r[a][1],yb=r[b][1];let k0=Math.max(0,Math.floor((Math.min(ya,yb)-y0)/h)),k1=Math.min(K-1,Math.floor((Math.max(ya,yb)-y0)/h));for(let k=k0;k<=k1;k++)L[k].push(a)}
+ return RS.set(r,s={y0,h,K,L}),s}
+function ring(p,r){if(r.length>300){const s=slabs(r);let k=Math.floor((p[1]-s.y0)/s.h);if(k===s.K&&(p[1]-s.y0)/s.h===s.K)k=s.K-1;if(k<0||k>=s.K)return false;let i=false;for(const a of s.L[k]){const b=a?a-1:r.length-1;if((r[a][1]>p[1])!=(r[b][1]>p[1])&&p[0]<(r[b][0]-r[a][0])*(p[1]-r[a][1])/(r[b][1]-r[a][1])+r[a][0])i=!i}return i}
+ let i=false;for(let a=0,b=r.length-1;a<r.length;b=a++)if((r[a][1]>p[1])!=(r[b][1]>p[1])&&p[0]<(r[b][0]-r[a][0])*(p[1]-r[a][1])/(r[b][1]-r[a][1])+r[a][0])i=!i;return i}
 const PB=new WeakMap(),pbox=q=>{let a=1e9,c=1e9,e=-1e9,g=-1e9;for(const v of q[0]){if(v[0]<a)a=v[0];if(v[0]>e)e=v[0];if(v[1]<c)c=v[1];if(v[1]>g)g=v[1]}return[a,c,e,g]};
 const inF=(p,f)=>{const b=bb(f);if(p[0]<b[0]||p[0]>b[2]||p[1]<b[1]||p[1]>b[3])return false;let P=PB.get(f);if(!P){P=polys(f.geometry).map(q=>({q,b:pbox(q)}));PB.set(f,P)}for(const o of P){if(p[0]<o.b[0]||p[0]>o.b[2]||p[1]<o.b[1]||p[1]>o.b[3])continue;if(ring(p,o.q[0])&&!o.q.slice(1).some(h=>ring(p,h)))return true}return false};
 const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])),defLab=p=>{const k=Object.keys(p||{});return k.find(x=>/nom|name|denom|cen_edu|insti|razon/i.test(x))||k.find(x=>typeof p[x]=="string")||k[0]||""};
@@ -169,7 +167,7 @@ function exec(it,scope){const lev=sel.s?"s":sel.p?"s":sel.d?"p":"p",k=sel.p||sel
 function cfg(l,i){const op=(a,v)=>a.map(k=>`<option ${k==v?"selected":""}>${esc(k)}</option>`).join("");
  if(l.role=="riesgo")return `<input type="text" data-e="${i}" value="${esc(l.ent||"")}" size="9" placeholder="Entidad"> <input type="text" data-c="${i}" value="${esc(l.comp||"")}" size="15" placeholder="Componente"> <small class="mu">nivel:</small><select data-lf="${i}">${op(fieldsOf(l),lfOf(l))}</select><select data-ns="${i}"><option value="4" ${nsOf(l)==4?"selected":""}>4 niveles</option><option value="5" ${nsOf(l)==5?"selected":""}>5 niveles</option></select>`;
  if(l.role=="expuesto")return `<small class="mu">etiqueta:</small><select data-lab="${i}">${op(fieldsOf(l),l.lab)}</select>`;return "—"}
-function panel(){shList();$("lt").innerHTML="<tr><th>Capa</th><th>Entidades</th><th>Rol</th><th>Configuración</th><th></th></tr>"+layers.map((l,i)=>`<tr><td>${l.name}${l.demo?" (demo)":""}</td><td>${l.fc.features.length}</td><td><select data-i="${i}">${["limite","riesgo","expuesto"].map(r=>`<option ${r==l.role?"selected":""}>${r}</option>`).join("")}</select></td><td>${cfg(l,i)}</td><td><button class="b" data-x="${i}">✕</button></td></tr>`).join("");
+function panel(){$("lt").innerHTML="<tr><th>Capa</th><th>Entidades</th><th>Rol</th><th>Configuración</th><th></th></tr>"+layers.map((l,i)=>`<tr><td>${l.name}${l.demo?" (demo)":""}</td><td>${l.fc.features.length}</td><td><select data-i="${i}">${["limite","riesgo","expuesto"].map(r=>`<option ${r==l.role?"selected":""}>${r}</option>`).join("")}</select></td><td>${cfg(l,i)}</td><td><button class="b" data-x="${i}">✕</button></td></tr>`).join("");
  $("lt").querySelectorAll("select[data-lab]").forEach(s=>s.onchange=()=>setLab(layers[s.dataset.lab],s.value));
  $("lt").querySelectorAll("input[data-e]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.e];l.ent=s.value.trim()||"Otra";dbPut(l);render();panel()});
  $("lt").querySelectorAll("input[data-c]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.c];l.comp=s.value.trim()||"Escenario";dbPut(l);render();panel()});
@@ -206,44 +204,7 @@ $("zi").onclick=()=>dz(2);$("zo").onclick=()=>dz(.5);$("zh").onclick=()=>drawMap
 $("ps").oninput=()=>{psz=+$("ps").value;drawMap(lastIt,lastSc,false)};
 demo();build();panel();
 const LECT=new URLSearchParams(location.search).get("modo")=="lectura";
-const sm=t=>$("sm").textContent=t,toast=(t,ms)=>{const z=$("busy");z.style.display="block";z.textContent=t;if(ms)setTimeout(()=>z.style.display="none",ms)},ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||"";v===null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){return ""}};
-const gz=async s=>{const b=new Uint8Array(await new Response(new Blob([s]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer());let t="";for(let i=0;i<b.length;i+=32768)t+=String.fromCharCode.apply(null,b.subarray(i,i+32768));return btoa(t)},
-gunz=async b64=>{const t=atob(b64),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i);return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).text()};
-const enlace=id=>location.origin+location.pathname+"?modo=lectura&g="+id;if(ls("gid"))$("lk").value=enlace(ls("gid"));$("tk").value=ls("gtok")?"••••••••••••••••":"";
-async function guardaToken(t){sm("Verificando token…");try{const r=await fetch("https://api.github.com/user",{headers:{Authorization:"Bearer "+t,Accept:"application/vnd.github+json"}});
- if(r.status==401){sm("✗ GitHub no aceptó el token (inválido o vencido). Pulsa «Crear token», cópialo completo y pégalo aquí.");return false}
- ls("gtok",t);$("tk").value="••••••••••••••••";const sc=r.headers.get("x-oauth-scopes")||"",u=r.ok?(await r.json()).login:"";sm("✓ Token válido"+(u?" (usuario "+u+")":"")+(sc&&!/gist/.test(sc)?" ⚠ pero no tiene el permiso «gist»":""));return true}catch(e){sm("✗ "+e.message);return false}}
-$("tks").onclick=()=>{const t=$("tk").value.trim();if(!t||/^•+$/.test(t))return sm("Pega primero el token");guardaToken(t)};
-$("cp").onclick=()=>{const k=$("lk");if(!k.value)return;k.select();try{navigator.clipboard.writeText(k.value)}catch(e){document.execCommand("copy")}sm("✓ Enlace copiado")};
-const GH=()=>({Authorization:"Bearer "+ls("gtok"),Accept:"application/vnd.github+json","Content-Type":"application/json"});
-var shOff;
-function rc(c){return typeof c[0]=="number"?[Math.round(c[0]*1e5)/1e5,Math.round(c[1]*1e5)/1e5]:c.map(rc)}
-function cnt(c){return typeof c[0]=="number"?1:c.reduce((a,x)=>a+cnt(x),0)}
-function estMB(l){return l._mb||(l._mb=l.fc.features.reduce((a,f)=>a+(f.geometry&&f.geometry.coordinates?cnt(f.geometry.coordinates):0),0)*22/1e6+l.fc.features.length*0.0002)}
-function shList(){shOff=shOff||new Set();const L=layers.filter(l=>!l.demo),z=$("shl");if(!z)return;
- z.innerHTML=L.length?'<small class="mu">Capas a compartir (≈ tamaño sin comprimir):</small><br>'+L.map(l=>`<label style="font-size:12px;margin-right:12px"><input type="checkbox" data-sh="${encodeURIComponent(l.name)}" ${shOff.has(l.name)?"":"checked"}> ${esc(l.name)} <span class="mu">(${l.fc.features.length.toLocaleString()} · ≈${estMB(l).toFixed(1)} MB)</span></label>`).join(""):"";
- z.querySelectorAll("input").forEach(c=>c.onchange=()=>{const n=decodeURIComponent(c.dataset.sh);c.checked?shOff.delete(n):shOff.add(n)})}
-const fail=async(r,que)=>{let t="";try{t=(await r.json()).message}catch(e){}sm("✗ GitHub respondió "+r.status+(t?" ("+t+")":"")+" al "+que+". "+([401,403,413,422].includes(r.status)?"El token pasó la verificación, así que lo más probable es que ese archivo sea demasiado grande para GitHub: desmárcalo o redúcelo (recorte / simplificación).":""))};
-$("sh").onclick=async()=>{try{shOff=shOff||new Set();const L=layers.filter(l=>!l.demo&&!shOff.has(l.name));if(!L.length)return sm("✗ No hay capas seleccionadas para compartir");
- const nt=$("tk").value.trim();if(nt&&!/^•+$/.test(nt)&&!await guardaToken(nt))return;if(!ls("gtok"))return sm("✗ Falta el token de GitHub (permiso gist)");
- sm("Verificando token…");{const rv=await fetch("https://api.github.com/user",{headers:GH()});if(rv.status==401)return sm("✗ El token guardado no es válido o venció. Crea uno nuevo, pégalo y vuelve a intentar.")}
- const tk=()=>new Promise(z=>setTimeout(z)),parts=[],items=[],used=new Set();let tot=0;
- for(const l of L){sm("Comprimiendo "+(parts.length+1)+"/"+L.length+": "+l.name+"…");await tk();let fn=(l.name||"capa").replace(/[^\w\-]+/g,"_");while(used.has(fn))fn+="_";used.add(fn);
-  const js=JSON.stringify({type:"FeatureCollection",features:l.fc.features.map(f=>({type:"Feature",properties:f.properties,geometry:f.geometry&&f.geometry.coordinates?{type:f.geometry.type,coordinates:rc(f.geometry.coordinates)}:f.geometry}))});let name=fn+".geojson",content=js;try{content=await gz(js);name=fn+".gz.b64"}catch(e){}
-  const mb=content.length/1e6;tot+=mb;if(mb>20&&!confirm("La capa «"+l.name+"» pesa "+mb.toFixed(1)+" MB comprimida. GitHub puede rechazarla y quienes abran el enlace tardarán en descargarla. ¿Intentar de todos modos?"))return sm("Cancelado: «"+l.name+"» es muy pesada. Recórtala/simplifícala o desmárcala.");
-  parts.push({name,content,label:l.name,mb});items.push({file:name,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns})}
- let gid=ls("gid"),old=[];const U=()=>"https://api.github.com/gists/"+gid,patch=files=>fetch(U(),{method:"PATCH",headers:GH(),body:JSON.stringify({files})});
- if(gid){const cur=await fetch(U(),{headers:GH()});if(cur.ok)old=Object.keys((await cur.json()).files||{});else gid=""}
- if(!gid){sm("Creando enlace…");const r=await fetch("https://api.github.com/gists",{method:"POST",headers:GH(),body:JSON.stringify({description:"Dashboard de riesgos – capas compartidas",public:false,files:{"manifest.json":{content:JSON.stringify({items:[]})}}})});if(!r.ok)return fail(r,"crear el enlace");gid=(await r.json()).id;ls("gid",gid)}
- for(let i=0;i<parts.length;i++){const p=parts[i];sm("Subiendo "+(i+1)+"/"+parts.length+": "+p.label+" ("+p.mb.toFixed(1)+" MB)… no cierres la página");const r=await patch({[p.name]:{content:p.content}});if(!r.ok)return fail(r,"subir «"+p.label+"» ("+p.mb.toFixed(1)+" MB)")}
- const fl={"manifest.json":{content:JSON.stringify({items})}};for(const k of old)if(k!="manifest.json"&&!parts.some(p=>p.name==k))fl[k]=null;
- sm("Publicando…");const r=await patch(fl);if(!r.ok)return fail(r,"publicar el enlace");
- $("lk").value=enlace(gid);sm("✓ "+L.length+" capa(s) compartida(s) ("+tot.toFixed(1)+" MB comprimidos). Copia el enlace.")}catch(e){sm("✗ "+(e instanceof TypeError?"No se pudo enviar a GitHub (¿capa demasiado grande o sin conexión?). Prueba compartiendo menos capas.":e.message))}};
-$("sx").onclick=async()=>{const gid=ls("gid");if(!gid)return sm("No hay enlace activo");try{const r=await fetch("https://api.github.com/gists/"+gid,{method:"DELETE",headers:GH()});if(r.ok||r.status==404){ls("gid",null);$("lk").value="";sm("✓ Dejaste de compartir: el enlace ya no funciona")}else sm("✗ GitHub respondió "+r.status)}catch(e){sm("✗ "+e.message)}};
-async function cargarGist(id){try{toast("Descargando capas compartidas…");const r=await fetch("https://api.github.com/gists/"+id,{headers:{Accept:"application/vnd.github+json"}});if(!r.ok)throw new Error("No se pudo abrir el enlace compartido ("+r.status+")");const F=(await r.json()).files||{};
- const txt=async f=>f.truncated||f.content==null?await(await fetch(f.raw_url)).text():f.content;if(!F["manifest.json"])throw new Error("El enlace no contiene capas");const m=JSON.parse(await txt(F["manifest.json"]));layers=[];
- for(const it of m.items){const f=F[it.file];if(!f)continue;let t=await txt(f);if(/\.gz\.b64$/.test(it.file))t=await gunz(t);const c=layers.length;addLayer(it.name,JSON.parse(t));if(layers.length>c){const l=layers[layers.length-1];l.role=it.role;if(it.ent){l.ent=it.ent;l.comp=it.comp}if(it.lab)l.lab=it.lab;if(it.lf)l.lf=it.lf;if(it.ns)l.ns=+it.ns}}
- await rebuild();toast("✓ "+layers.length+" capa(s) cargadas",2500)}catch(e){toast("✗ "+e.message,9000)}}
+const toast=(t,ms)=>{const z=$("busy");z.style.display="block";z.textContent=t;if(ms)setTimeout(()=>z.style.display="none",ms)};
 const pm=t=>$("pms").textContent=t,nap=()=>new Promise(z=>setTimeout(z));
 $("psv").onclick=async()=>{try{const L=layers.filter(l=>!l.demo);if(!L.length)return pm("✗ No hay capas reales cargadas");toast("Comprimiendo proyecto…");await nap();
  const js=JSON.stringify({app:"riesgos-cajamarca",v:1,fecha:new Date().toISOString(),layers:L.map(l=>({name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns,fc:{type:"FeatureCollection",features:l.fc.features.map(f=>({type:"Feature",properties:f.properties,geometry:f.geometry}))}}))});
@@ -258,7 +219,6 @@ $("pfi").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{toast("Le
 const boot=async()=>{if(LECT)document.querySelector('.tab[data-t="c"]').classList.add("hide");let crash=false;try{crash=localStorage.getItem("boot")=="1";localStorage.setItem("boot","1")}catch(e){}
  const done=()=>{try{localStorage.removeItem("boot")}catch(e){}};
  if(crash&&!LECT){msg("⚠ La sesión anterior se cerró mientras cargaba. Las capas guardadas NO se restauraron: pulsa «Restaurar guardadas».");done();return}
- const gq=new URLSearchParams(location.search).get("g");if(gq){await cargarGist(gq);done();return}
  const a=LECT?[]:await dbAll();if(a.length){layers=a;await rebuild();msg("✓ "+a.length+" capa(s) restauradas del navegador");done();return}
  const m=await fetch("capas/manifest.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
  if(m&&m.items&&m.items.length){layers=[];for(const it of m.items){try{const fc=await(await fetch(it.url)).json(),c=layers.length;addLayer(it.name,fc);if(layers.length>c){const l=layers[layers.length-1];l.role=it.role;if(it.ent){l.ent=it.ent;l.comp=it.comp}if(it.lab)l.lab=it.lab;if(it.lf)l.lf=it.lf;if(it.ns)l.ns=+it.ns}}catch(e){}}await rebuild();msg("✓ Capas cargadas desde el repositorio ("+layers.length+")")}done()};
