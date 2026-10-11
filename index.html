@@ -42,6 +42,10 @@ svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;borde
 <section id="b" class="hide"><div class="card"><h2 id="eh">Prioridad de intervención inmediata</h2><div class="ov" style="max-height:none"><table id="ex"></table></div></div></section>
 
 <section id="c" class="hide">
+<div class="card"><h2>Proyecto: guardar y abrir</h2>
+<p class="mu">Guarda todas tus capas y su configuración en <b>un solo archivo</b> para pasarlo a otra persona (correo, Teams, Drive, USB). Ella abre este mismo dashboard y pulsa <b>Abrir proyecto</b>: no tiene que cargar ni configurar nada.</p>
+<div class="row"><button class="b" id="psv">💾 Guardar proyecto</button><button class="b" id="pop">📂 Abrir proyecto</button><span id="pms" class="mu"></span></div>
+<input type="file" id="pfi" accept=".riesgos,.json,.gz" class="hide"></div>
 <div class="card"><h2>Cargar capas</h2><p class="mu">Sube los GeoJSON que preparaste en QGIS. Cada botón indica qué tipo de capa es. Puedes subir tantas capas de elementos expuestos como necesites y, en la tabla de abajo, elegir qué campo se usa como <b>etiqueta</b> de cada una.</p>
 <div class="ld">
 <button class="b" data-ld data-role="limite">① Límites distritales</button>
@@ -57,6 +61,7 @@ svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;borde
 <div class="card"><h2>Compartir con un solo enlace</h2>
 <p class="mu">Cargas tus capas aquí y compartes <b>un único enlace</b>: quien lo abra las ve sin cargar nada. Si vuelves a compartir, el enlace es el mismo y se actualiza solo. Las capas se guardan comprimidas en un Gist <i>secreto</i> de tu cuenta de GitHub (no se agrega nada a tu repositorio).</p>
 <div class="row"><input type="password" id="tk" size="34" placeholder="Token de GitHub (permiso gist)"><button class="b" id="tks">Guardar token</button><a class="b" target="_blank" rel="noopener" href="https://github.com/settings/tokens/new?scopes=gist&description=Dashboard%20riesgos">Crear token</a></div>
+<div id="shl" style="margin:6px 0"></div>
 <div class="row"><button class="b" id="sh">🔗 Compartir capas</button><button class="b rs" id="sx">Dejar de compartir</button><span id="sm" class="mu"></span></div>
 <div class="row"><input type="text" id="lk" readonly size="62" placeholder="Aquí aparece el enlace para compartir"><button class="b" id="cp">Copiar</button></div>
 <small class="mu">El token solo necesita el permiso «gist» y se guarda en este navegador. Cualquiera que tenga el enlace puede ver las capas (no aparece en búsquedas, pero tampoco tiene contraseña).</small></div>
@@ -164,7 +169,7 @@ function exec(it,scope){const lev=sel.s?"s":sel.p?"s":sel.d?"p":"p",k=sel.p||sel
 function cfg(l,i){const op=(a,v)=>a.map(k=>`<option ${k==v?"selected":""}>${esc(k)}</option>`).join("");
  if(l.role=="riesgo")return `<input type="text" data-e="${i}" value="${esc(l.ent||"")}" size="9" placeholder="Entidad"> <input type="text" data-c="${i}" value="${esc(l.comp||"")}" size="15" placeholder="Componente"> <small class="mu">nivel:</small><select data-lf="${i}">${op(fieldsOf(l),lfOf(l))}</select><select data-ns="${i}"><option value="4" ${nsOf(l)==4?"selected":""}>4 niveles</option><option value="5" ${nsOf(l)==5?"selected":""}>5 niveles</option></select>`;
  if(l.role=="expuesto")return `<small class="mu">etiqueta:</small><select data-lab="${i}">${op(fieldsOf(l),l.lab)}</select>`;return "—"}
-function panel(){$("lt").innerHTML="<tr><th>Capa</th><th>Entidades</th><th>Rol</th><th>Configuración</th><th></th></tr>"+layers.map((l,i)=>`<tr><td>${l.name}${l.demo?" (demo)":""}</td><td>${l.fc.features.length}</td><td><select data-i="${i}">${["limite","riesgo","expuesto"].map(r=>`<option ${r==l.role?"selected":""}>${r}</option>`).join("")}</select></td><td>${cfg(l,i)}</td><td><button class="b" data-x="${i}">✕</button></td></tr>`).join("");
+function panel(){shList();$("lt").innerHTML="<tr><th>Capa</th><th>Entidades</th><th>Rol</th><th>Configuración</th><th></th></tr>"+layers.map((l,i)=>`<tr><td>${l.name}${l.demo?" (demo)":""}</td><td>${l.fc.features.length}</td><td><select data-i="${i}">${["limite","riesgo","expuesto"].map(r=>`<option ${r==l.role?"selected":""}>${r}</option>`).join("")}</select></td><td>${cfg(l,i)}</td><td><button class="b" data-x="${i}">✕</button></td></tr>`).join("");
  $("lt").querySelectorAll("select[data-lab]").forEach(s=>s.onchange=()=>setLab(layers[s.dataset.lab],s.value));
  $("lt").querySelectorAll("input[data-e]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.e];l.ent=s.value.trim()||"Otra";dbPut(l);render();panel()});
  $("lt").querySelectorAll("input[data-c]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.c];l.comp=s.value.trim()||"Escenario";dbPut(l);render();panel()});
@@ -211,22 +216,45 @@ async function guardaToken(t){sm("Verificando token…");try{const r=await fetch
 $("tks").onclick=()=>{const t=$("tk").value.trim();if(!t||/^•+$/.test(t))return sm("Pega primero el token");guardaToken(t)};
 $("cp").onclick=()=>{const k=$("lk");if(!k.value)return;k.select();try{navigator.clipboard.writeText(k.value)}catch(e){document.execCommand("copy")}sm("✓ Enlace copiado")};
 const GH=()=>({Authorization:"Bearer "+ls("gtok"),Accept:"application/vnd.github+json","Content-Type":"application/json"});
-$("sh").onclick=async()=>{try{const L=layers.filter(l=>!l.demo);if(!L.length)return sm("✗ No hay capas reales cargadas");const nt=$("tk").value.trim();if(nt&&!/^•+$/.test(nt)&&!await guardaToken(nt))return;if(!ls("gtok"))return sm("✗ Falta el token de GitHub (permiso gist)");
+var shOff;
+function rc(c){return typeof c[0]=="number"?[Math.round(c[0]*1e5)/1e5,Math.round(c[1]*1e5)/1e5]:c.map(rc)}
+function cnt(c){return typeof c[0]=="number"?1:c.reduce((a,x)=>a+cnt(x),0)}
+function estMB(l){return l._mb||(l._mb=l.fc.features.reduce((a,f)=>a+(f.geometry&&f.geometry.coordinates?cnt(f.geometry.coordinates):0),0)*22/1e6+l.fc.features.length*0.0002)}
+function shList(){shOff=shOff||new Set();const L=layers.filter(l=>!l.demo),z=$("shl");if(!z)return;
+ z.innerHTML=L.length?'<small class="mu">Capas a compartir (≈ tamaño sin comprimir):</small><br>'+L.map(l=>`<label style="font-size:12px;margin-right:12px"><input type="checkbox" data-sh="${encodeURIComponent(l.name)}" ${shOff.has(l.name)?"":"checked"}> ${esc(l.name)} <span class="mu">(${l.fc.features.length.toLocaleString()} · ≈${estMB(l).toFixed(1)} MB)</span></label>`).join(""):"";
+ z.querySelectorAll("input").forEach(c=>c.onchange=()=>{const n=decodeURIComponent(c.dataset.sh);c.checked?shOff.delete(n):shOff.add(n)})}
+const fail=async(r,que)=>{let t="";try{t=(await r.json()).message}catch(e){}sm("✗ GitHub respondió "+r.status+(t?" ("+t+")":"")+" al "+que+". "+([401,403,413,422].includes(r.status)?"El token pasó la verificación, así que lo más probable es que ese archivo sea demasiado grande para GitHub: desmárcalo o redúcelo (recorte / simplificación).":""))};
+$("sh").onclick=async()=>{try{shOff=shOff||new Set();const L=layers.filter(l=>!l.demo&&!shOff.has(l.name));if(!L.length)return sm("✗ No hay capas seleccionadas para compartir");
+ const nt=$("tk").value.trim();if(nt&&!/^•+$/.test(nt)&&!await guardaToken(nt))return;if(!ls("gtok"))return sm("✗ Falta el token de GitHub (permiso gist)");
  sm("Verificando token…");{const rv=await fetch("https://api.github.com/user",{headers:GH()});if(rv.status==401)return sm("✗ El token guardado no es válido o venció. Crea uno nuevo, pégalo y vuelve a intentar.")}
- sm("Comprimiendo…");await new Promise(z=>setTimeout(z));const files={},items=[],used=new Set();
- for(const l of L){let fn=(l.name||"capa").replace(/[^\w\-]+/g,"_");while(used.has(fn))fn+="_";used.add(fn);
-  const js=JSON.stringify({type:"FeatureCollection",features:l.fc.features.map(f=>({type:"Feature",properties:f.properties,geometry:f.geometry}))});let name=fn+".geojson",content=js;try{content=await gz(js);name=fn+".gz.b64"}catch(e){}
-  files[name]={content};items.push({file:name,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns})}
- files["manifest.json"]={content:JSON.stringify({items})};let gid=ls("gid"),r;sm("Subiendo "+(Object.values(files).reduce((a,f)=>a+f.content.length,0)/1e6).toFixed(1)+" MB a GitHub… (puede tardar un poco)");
- if(gid){const cur=await fetch("https://api.github.com/gists/"+gid,{headers:GH()});if(cur.ok){const cj=await cur.json();for(const k of Object.keys(cj.files))if(!files[k])files[k]=null;r=await fetch("https://api.github.com/gists/"+gid,{method:"PATCH",headers:GH(),body:JSON.stringify({files})})}else gid=""}
- if(!gid)r=await fetch("https://api.github.com/gists",{method:"POST",headers:GH(),body:JSON.stringify({description:"Dashboard de riesgos – capas compartidas",public:false,files})});
- if(!r.ok){let t="";try{t=(await r.json()).message}catch(e){}return sm("✗ GitHub respondió "+r.status+(t?": "+t:""))}
- const j=await r.json();ls("gid",j.id);$("lk").value=enlace(j.id);sm("✓ "+L.length+" capa(s) compartida(s). Copia el enlace.")}catch(e){sm("✗ "+e.message)}};
+ const tk=()=>new Promise(z=>setTimeout(z)),parts=[],items=[],used=new Set();let tot=0;
+ for(const l of L){sm("Comprimiendo "+(parts.length+1)+"/"+L.length+": "+l.name+"…");await tk();let fn=(l.name||"capa").replace(/[^\w\-]+/g,"_");while(used.has(fn))fn+="_";used.add(fn);
+  const js=JSON.stringify({type:"FeatureCollection",features:l.fc.features.map(f=>({type:"Feature",properties:f.properties,geometry:f.geometry&&f.geometry.coordinates?{type:f.geometry.type,coordinates:rc(f.geometry.coordinates)}:f.geometry}))});let name=fn+".geojson",content=js;try{content=await gz(js);name=fn+".gz.b64"}catch(e){}
+  const mb=content.length/1e6;tot+=mb;if(mb>20&&!confirm("La capa «"+l.name+"» pesa "+mb.toFixed(1)+" MB comprimida. GitHub puede rechazarla y quienes abran el enlace tardarán en descargarla. ¿Intentar de todos modos?"))return sm("Cancelado: «"+l.name+"» es muy pesada. Recórtala/simplifícala o desmárcala.");
+  parts.push({name,content,label:l.name,mb});items.push({file:name,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns})}
+ let gid=ls("gid"),old=[];const U=()=>"https://api.github.com/gists/"+gid,patch=files=>fetch(U(),{method:"PATCH",headers:GH(),body:JSON.stringify({files})});
+ if(gid){const cur=await fetch(U(),{headers:GH()});if(cur.ok)old=Object.keys((await cur.json()).files||{});else gid=""}
+ if(!gid){sm("Creando enlace…");const r=await fetch("https://api.github.com/gists",{method:"POST",headers:GH(),body:JSON.stringify({description:"Dashboard de riesgos – capas compartidas",public:false,files:{"manifest.json":{content:JSON.stringify({items:[]})}}})});if(!r.ok)return fail(r,"crear el enlace");gid=(await r.json()).id;ls("gid",gid)}
+ for(let i=0;i<parts.length;i++){const p=parts[i];sm("Subiendo "+(i+1)+"/"+parts.length+": "+p.label+" ("+p.mb.toFixed(1)+" MB)… no cierres la página");const r=await patch({[p.name]:{content:p.content}});if(!r.ok)return fail(r,"subir «"+p.label+"» ("+p.mb.toFixed(1)+" MB)")}
+ const fl={"manifest.json":{content:JSON.stringify({items})}};for(const k of old)if(k!="manifest.json"&&!parts.some(p=>p.name==k))fl[k]=null;
+ sm("Publicando…");const r=await patch(fl);if(!r.ok)return fail(r,"publicar el enlace");
+ $("lk").value=enlace(gid);sm("✓ "+L.length+" capa(s) compartida(s) ("+tot.toFixed(1)+" MB comprimidos). Copia el enlace.")}catch(e){sm("✗ "+(e instanceof TypeError?"No se pudo enviar a GitHub (¿capa demasiado grande o sin conexión?). Prueba compartiendo menos capas.":e.message))}};
 $("sx").onclick=async()=>{const gid=ls("gid");if(!gid)return sm("No hay enlace activo");try{const r=await fetch("https://api.github.com/gists/"+gid,{method:"DELETE",headers:GH()});if(r.ok||r.status==404){ls("gid",null);$("lk").value="";sm("✓ Dejaste de compartir: el enlace ya no funciona")}else sm("✗ GitHub respondió "+r.status)}catch(e){sm("✗ "+e.message)}};
 async function cargarGist(id){try{toast("Descargando capas compartidas…");const r=await fetch("https://api.github.com/gists/"+id,{headers:{Accept:"application/vnd.github+json"}});if(!r.ok)throw new Error("No se pudo abrir el enlace compartido ("+r.status+")");const F=(await r.json()).files||{};
  const txt=async f=>f.truncated||f.content==null?await(await fetch(f.raw_url)).text():f.content;if(!F["manifest.json"])throw new Error("El enlace no contiene capas");const m=JSON.parse(await txt(F["manifest.json"]));layers=[];
  for(const it of m.items){const f=F[it.file];if(!f)continue;let t=await txt(f);if(/\.gz\.b64$/.test(it.file))t=await gunz(t);const c=layers.length;addLayer(it.name,JSON.parse(t));if(layers.length>c){const l=layers[layers.length-1];l.role=it.role;if(it.ent){l.ent=it.ent;l.comp=it.comp}if(it.lab)l.lab=it.lab;if(it.lf)l.lf=it.lf;if(it.ns)l.ns=+it.ns}}
  await rebuild();toast("✓ "+layers.length+" capa(s) cargadas",2500)}catch(e){toast("✗ "+e.message,9000)}}
+const pm=t=>$("pms").textContent=t,nap=()=>new Promise(z=>setTimeout(z));
+$("psv").onclick=async()=>{try{const L=layers.filter(l=>!l.demo);if(!L.length)return pm("✗ No hay capas reales cargadas");toast("Comprimiendo proyecto…");await nap();
+ const js=JSON.stringify({app:"riesgos-cajamarca",v:1,fecha:new Date().toISOString(),layers:L.map(l=>({name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns,fc:{type:"FeatureCollection",features:l.fc.features.map(f=>({type:"Feature",properties:f.properties,geometry:f.geometry}))}}))});
+ let blob;try{blob=await new Response(new Blob([js]).stream().pipeThrough(new CompressionStream("gzip"))).blob()}catch(e){blob=new Blob([js])}
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="proyecto_riesgos.riesgos";a.click();pm("✓ Proyecto guardado: "+L.length+" capa(s), "+(blob.size/1e6).toFixed(1)+" MB. Envía ese archivo.")}catch(e){pm("✗ "+e.message)}finally{$("busy").style.display="none"}};
+$("pop").onclick=()=>{$("pfi").value="";$("pfi").click()};
+$("pfi").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{toast("Leyendo proyecto…");await nap();const h=new Uint8Array(await f.slice(0,2).arrayBuffer());
+ const txt=h[0]==0x1f&&h[1]==0x8b?await new Response(f.stream().pipeThrough(new DecompressionStream("gzip"))).text():await f.text();
+ const P=JSON.parse(txt);if(!P||P.app!=="riesgos-cajamarca"||!Array.isArray(P.layers))throw new Error("El archivo no es un proyecto de este dashboard");if(!P.layers.length)throw new Error("El proyecto no tiene capas");
+ await dbClear();layers=[];for(const x of P.layers){toast("Cargando «"+x.name+"»…");await nap();const c=layers.length;addLayer(x.name,x.fc);if(layers.length>c){const l=layers[layers.length-1];l.id=Date.now()+"_"+Math.random().toString(36).slice(2);l.role=x.role;l.ent=x.ent;l.comp=x.comp;if(x.lab)l.lab=x.lab;if(x.lf)l.lf=x.lf;if(x.ns)l.ns=+x.ns;await dbPut(l)}}
+ await rebuild();pm("✓ Proyecto abierto: "+layers.length+" capa(s). Ve a «Mapa y análisis».")}catch(err){pm("✗ "+err.message);$("busy").style.display="none"}};
 const boot=async()=>{if(LECT)document.querySelector('.tab[data-t="c"]').classList.add("hide");let crash=false;try{crash=localStorage.getItem("boot")=="1";localStorage.setItem("boot","1")}catch(e){}
  const done=()=>{try{localStorage.removeItem("boot")}catch(e){}};
  if(crash&&!LECT){msg("⚠ La sesión anterior se cerró mientras cargaba. Las capas guardadas NO se restauraron: pulsa «Restaurar guardadas».");done();return}
