@@ -23,23 +23,70 @@ tr.cl{cursor:pointer}tr.cl:hover{background:var(--bg)}
 .lg{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;font-size:12px}.lg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-2px}
 .note{border:1px dashed var(--bd);padding:10px;border-radius:8px;color:var(--mu);font-size:12px}
 .row{display:flex;gap:8px;margin:6px 0;flex-wrap:wrap}.row input{flex:1;min-width:220px}
-svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;border-radius:6px;overflow-x:auto;font-size:12px}.ld{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}.ld .b{text-align:center;padding:10px}.st{font-weight:700;color:var(--ac)}</style></head><body>
-<header><h1>Dashboard de Gestión de Riesgos – Cajamarca</h1><small>Escenarios CENEPRED · Avisos SENAMHI · Elementos expuestos</small><br><small>Elaborado por Victor Enrique Mendoza Astopilco – Especialista SIG - SGAT</small></header>
+svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;border-radius:6px;overflow-x:auto;font-size:12px}.ld{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}.ld .b{text-align:center;padding:10px}.st{font-weight:700;color:var(--ac)}
+header{background:linear-gradient(135deg,#0f3558,#1f5fa8);color:#fff;border:0;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:19px;letter-spacing:.2px}header small{color:#cfe0f5}header .by{text-align:right;font-size:12px;line-height:1.35}
+.tabs{padding:6px 20px 0}.tab{padding:10px 16px;font-weight:500}
+main{max-width:1760px;padding:12px 16px}
+#bar{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.view{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(340px,1fr);gap:14px;height:var(--vh,auto)}
+.mapcard{display:flex;flex-direction:column;min-height:0;background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.maphead{padding:10px 14px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center}.maphead h2{margin:0;font-size:14px}
+.mapbox{flex:1;min-height:0;position:relative;background:var(--bg)}
+.mapbox svg#map{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ctl{position:absolute;left:10px;top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--card);padding:6px 8px;border-radius:10px;border:1px solid var(--bd);box-shadow:0 2px 6px rgba(0,0,0,.12);font-size:12px}
+.ctl .b{padding:4px 9px}.ctl input[type=range]{width:70px;vertical-align:middle}
+.lgd{position:absolute;left:10px;bottom:10px;display:flex;flex-wrap:wrap;gap:4px 12px;background:var(--card);padding:7px 11px;border-radius:10px;border:1px solid var(--bd);box-shadow:0 2px 6px rgba(0,0,0,.12);font-size:12px;max-width:calc(100% - 20px)}
+.lgd i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.side{overflow:auto;min-height:0;padding:0 4px 4px 0}
+.side .card{margin-bottom:12px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.kpis{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}.k{background:var(--card);border-radius:12px;padding:10px 12px;border:1px solid var(--bd);border-left-width:5px;box-shadow:0 1px 3px rgba(0,0,0,.06)}.k b{font-size:24px;line-height:1.15}.k small{font-size:12px}
+.kpis4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}@media(max-width:700px){.kpis4{grid-template-columns:repeat(2,1fr)}}
+.dn{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.dl{flex:1;min-width:150px;display:grid;gap:5px;font-size:13px}.dl div{display:flex;align-items:center;gap:7px}.dl i{width:12px;height:12px;border-radius:3px;flex:none}.dl b{margin-left:auto}.dl span{color:var(--mu);width:46px;text-align:right;font-size:12px}
+.sb{margin:9px 0}.sbh{display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px}.sbb{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--bg)}.sbb span{display:block;height:100%}
+.rk{display:grid;grid-template-columns:minmax(80px,1.2fr) 2fr auto auto;gap:8px;align-items:center;padding:4px 6px;border-radius:6px;cursor:pointer;font-size:13px}.rk:hover{background:var(--bg)}.rk .rn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rbar{height:10px;border-radius:5px;background:var(--bg);overflow:hidden}.rbar i{display:block;height:100%;border-radius:5px}
+@media(max-width:900px){.view{display:block;height:auto}.mapcard{height:64vh;margin-bottom:12px}.side{overflow:visible}}
+
+.maptools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:8px 12px;border-bottom:1px solid var(--bd);font-size:12px}.maptools .b{padding:5px 11px}.maptools input[type=range]{width:90px;vertical-align:middle}
+.maplegend{display:flex;flex-wrap:wrap;gap:4px 16px;padding:8px 14px;border-top:1px solid var(--bd);font-size:12px}.maplegend i,.lg2 i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.lg2{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;margin:-2px 0 8px}
+.rk{grid-template-columns:minmax(80px,1.1fr) 2fr minmax(86px,auto)!important}.rbar{display:flex!important}.rbar i{border-radius:0!important;flex:none}.rv{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15}.rv small{font-size:11px;white-space:nowrap}
+.exgrid{display:grid;grid-template-columns:minmax(300px,.75fr) minmax(0,1.7fr);gap:14px;align-items:start}@media(max-width:1000px){.exgrid{grid-template-columns:1fr}}
+#exmap{width:100%;height:430px;display:block;background:var(--bg);border-radius:8px}.exn{font-size:14px;line-height:1.65}.exh{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.exh h2{margin:0}
+.pb{display:inline-block;width:70px;height:8px;border-radius:4px;background:var(--bg);overflow:hidden;vertical-align:middle;margin-right:4px}.pb i{display:block;height:100%}
+.how{margin-top:10px;font-size:13px}.how summary{cursor:pointer;color:var(--ac);font-weight:600}.how p{margin:6px 0}
+#ex td:nth-child(2),#ex th:nth-child(2),#ex td:last-child,#ex th:last-child{text-align:left}
+</style></head><body>
+<header><div><h1>Dashboard de Gestión de Riesgos – Cajamarca</h1><small>Escenarios CENEPRED · Avisos SENAMHI · Elementos expuestos</small></div><div class="by"><small>Elaborado por<br><b style="color:#fff">Victor Enrique Mendoza Astopilco</b><br>Especialista en SIG</small></div></header>
 <div class="tabs"><button class="tab on" data-t="a">Mapa y análisis</button><button class="tab" data-t="b">Módulo ejecutivo (semáforo)</button><button class="tab" data-t="c">Capas y fuentes</button></div>
 <main>
 <div id="bar" class="bar">
 <select id="sd"></select><select id="sp"></select><select id="ss"></select>
 <select id="se"></select><select id="sk"></select><select id="bm"><option value="">Sin mapa base</option><option value="osm">Base: OpenStreetMap</option><option value="sat">Base: Google Satélite</option></select><button class="b rs" id="rs">✕ Limpiar selección</button></div>
 
-<section id="a"><div class="grid">
-<div class="card"><h2 id="mt"></h2><div class="row" style="margin:0 0 6px"><button class="b" id="zi">＋</button><button class="b" id="zo">－</button><button class="b" id="zh">⌂ Ajustar</button><label class="mu">Tamaño de punto <input type="range" id="ps" min="1" max="8" value="3"></label><button class="b" id="rk">👁 Mapa de riesgo: ON</button></div><svg id="map" viewBox="0 0 600 520" width="100%" style="max-height:560px"></svg>
-<div class="lg" id="lgd"></div></div>
-<div><div class="card"><h2>Elementos expuestos (todas las capas analizadas)</h2><div class="kpis" id="kp"></div><div class="ov"><table id="tb"></table></div><small class="mu">Clic en una capa para abrir su tabla y ubicar elementos en el mapa.</small></div></div>
-</div>
+<section id="a"><div class="view">
+<div class="mapcard"><div class="maphead"><h2 id="mt"></h2></div>
+<div class="maptools"><button class="b" id="zi">＋</button><button class="b" id="zo">－</button><button class="b" id="zh">⌂ Ajustar</button><label class="mu">Tamaño de punto <input type="range" id="ps" min="1" max="8" value="3"></label><button class="b" id="rk">👁 Mapa de riesgo: ON</button></div>
+<div class="mapbox" id="mapbox"><svg id="map" viewBox="0 0 600 520"></svg></div>
+<div class="maplegend" id="lgd"></div></div>
+<div class="side" id="side">
+<div class="kpis" id="kp"></div>
+<div class="card"><h2>Distribución por nivel de riesgo</h2><div id="ch1"></div></div>
+<div class="card"><h2>Elementos expuestos por capa y nivel</h2><div id="ch2"></div></div>
+<div class="card"><h2 id="ch3t">Mayor exposición</h2><div class="lg2" id="ch3l"></div><div id="ch3"></div><small class="mu">Clic en una barra para acercarte a ese ámbito.</small></div>
+<div class="card"><h2>Elementos expuestos (todas las capas analizadas)</h2><div class="ov"><table id="tb"></table></div><small class="mu">Clic en una capa para abrir su tabla y ubicar elementos en el mapa.</small></div>
 <div class="card hide" id="dt"><h2 id="dh"></h2><div class="bar"><select id="df"></select><small class="mu">Etiqueta:</small><select id="dlab"></select><button class="b" id="dx">✕ Cerrar tabla y mostrar todas las capas</button></div><div class="ov"><table id="dtb"></table></div></div>
-</section>
+</div></div></section>
 
-<section id="b" class="hide"><div class="card"><h2 id="eh">Prioridad de intervención inmediata</h2><div class="ov" style="max-height:none"><table id="ex"></table></div></div></section>
+<section id="b" class="hide">
+<div class="card"><h2>Resumen ejecutivo</h2><div id="exn" class="exn"></div></div>
+<div class="kpis4" id="exs"></div>
+<div class="exgrid">
+<div class="card"><h2 id="exmt">Mapa semáforo</h2><svg id="exmap" viewBox="0 0 400 440"></svg><div class="lg2" id="exlg" style="margin-top:8px"></div></div>
+<div class="card"><div class="exh"><h2 id="eh">Prioridad de intervención</h2><button class="b" id="exc">⬇ Exportar tabla (CSV)</button></div>
+<div class="ov" style="max-height:none"><table id="ex"></table></div>
+<details class="how"><summary>¿Cómo se lee esta tabla?</summary><div id="exhow"></div></details></div>
+</div></section>
 
 <section id="c" class="hide">
 <div class="card"><h2>Proyecto: guardar y abrir</h2>
@@ -60,7 +107,7 @@ svg#map{touch-action:none;cursor:grab}pre{background:var(--bg);padding:8px;borde
 <p class="mu">Elementos expuestos: colegios, salud, vías, parcelas… en GeoJSON. Puedes subir los que quieras: el análisis usa todas las capas cargadas.</p></div>
 <div class="card"><h2>Capas cargadas</h2><div class="ov"><table id="lt"></table></div><div class="row"><button class="b" id="rg">Restaurar guardadas</button><button class="b" id="dm">Restaurar demo</button><button class="b rs" id="cl">Quitar todas</button></div></div></section>
 </main>
-<div id="busy" style="display:none;position:fixed;right:12px;bottom:12px;background:var(--ac);color:#fff;padding:8px 12px;border-radius:8px;z-index:9"></div>
+<div id="busy" style="display:none;position:fixed;right:12px;bottom:12px;background:var(--ac);color:#fff;padding:4px 11px;border-radius:999px;font-size:12px;opacity:.93;max-width:280px;z-index:9"></div>
 <script>
 const SCS={C:{L:["","Muy bajo","Bajo","Medio","Alto","Muy alto"],C:["","#a1d99b","#238b45","#ffff00","#ff9800","#f44336"]},S:{L:["","Nivel 1","Nivel 2","Nivel 3","Nivel 4"],C:["","#ffffff","#ffff00","#ffa500","#ff0000"]}},$=i=>document.getElementById(i);let LV=SCS.S.L,CO=SCS.S.C,N=4,RG=[1,2,3,4],V=null,keep=false,lastIt=[],lastSc=[];const TW=256,mx=l=>(l+180)/360,my=a=>{const r=a*Math.PI/180;return(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2};
 function setScale(){const R=layers.find(l=>l.name==scn&&l.role=="riesgo"),g=R&&nsOf(R)==5,c=g?SCS.C:SCS.S;LV=c.L;CO=c.C;N=LV.length-1;RG=[...Array(N).keys()].map(i=>i+1);if(N!=lastN){hideLv=new Set();lastN=N}}
@@ -87,6 +134,7 @@ const nmL=(l,f)=>{const v=l.lab&&f.properties?f.properties[l.lab]:null;return v!
 const fieldsOf=l=>[...new Set(l.fc.features.slice(0,300).flatMap(f=>Object.keys(f.properties||{})))],
 setLab=(l,v)=>{l.lab=v;dbPut(l);Object.values(cache).forEach(a=>a.forEach(i=>{if(i.l==l.name)i.nm=nmL(l,i.f)}));render();panel()};
 const nm=p=>{const k=key(p,/^(nombre|name|nom_|cen_edu|nom)/i);return k?p[k]:Object.values(p||{}).find(v=>typeof v=="string")||"s/n"};
+let MW=600,MH=520,FIT=false,UC=new WeakMap(),EXCSV="";const FX=c=>c=="#ffffff"?"#b0bec5":c;
 let hideLv=new Set(),hideL=new Set(),psz=3,lastN=0,showRisk=true,anaId=0;
 const DB=()=>new Promise((ok,ko)=>{const r=indexedDB.open("riesgos",1);r.onupgradeneeded=()=>r.result.createObjectStore("l",{keyPath:"id"});r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)});
 const dbDo=async(m,f)=>{try{const d=await DB();return await new Promise((ok,ko)=>{const t=d.transaction("l",m),q=f(t.objectStore("l"));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>ko(t.error)})}catch(e){return null}};
@@ -97,14 +145,14 @@ function gridOf(R,FF){if(R._g)return R._g;const F=FF||R.fc.features,e=F.map(bb);
 function lvAt(R,k,pt){const g=gridOf(R);let a=Math.floor((pt[0]-g.x0)/g.cw),d=Math.floor((pt[1]-g.y0)/g.ch);if(a<0||d<0||a>g.n||d>g.n)return 0;a=Math.min(a,g.n-1);d=Math.min(d,g.n-1);let lv=0;for(const i of g.c.get(a*g.n+d)||[]){const q=g.F[i];if(inF(pt,q))lv=Math.max(lv,lvl(q.properties[k]))}return lv}
 function addLayer(name,fc,demo){const fs=(fc.features||[]).filter(f=>f.geometry);if(!fs.length)return;const p=fs[0].properties||{},poly=/Polygon/.test(fs[0].geometry.type);
  const role=poly&&key(p,/^(distri|nombdist)/i)?"limite":poly&&key(p,/gridcode|niv|riesg|peligro|grado/i)?"riesgo":"expuesto";layers.push({name,fc:{features:fs},role,demo,lab:defLab(p),lf:key(p,/gridcode|niv|riesg|peligro|grado|susc|categ|clase/i)||"",ns:key(p,/gridcode/i)?5:4,...guess(name,p)})}
-function build(skip){B=[];layers.filter(l=>l.role=="limite").forEach(l=>l.fc.features.forEach(f=>{const p=f.properties;B.push({f,dep:p[key(p,/^(depart|nombdep)/i)]||"",pro:p[key(p,/^(provin|nombprov)/i)]||"",dis:p[key(p,/^(distri|nombdist)/i)]||""})}));
+function build(skip){UC=new WeakMap();B=[];layers.filter(l=>l.role=="limite").forEach(l=>l.fc.features.forEach(f=>{const p=f.properties;B.push({f,dep:p[key(p,/^(depart|nombdep)/i)]||"",pro:p[key(p,/^(provin|nombprov)/i)]||"",dis:p[key(p,/^(distri|nombdist)/i)]||""})}));
  const r=layers.filter(l=>l.role=="riesgo");if(!r.find(l=>l.name==scn))scn=r[0]?r[0].name:"";cache={};sel={d:"",p:"",s:""};open=null;hl=null;V=null;if(!skip)render()}
 const unitOf=p=>{if(!B._g)gridOf(B,B.map(u=>u.f));const g=B._g;let a=Math.floor((p[0]-g.x0)/g.cw),d=Math.floor((p[1]-g.y0)/g.ch);if(a<0||d<0||a>g.n||d>g.n)return null;a=Math.min(a,g.n-1);d=Math.min(d,g.n-1);for(const i of g.c.get(a*g.n+d)||[])if(inF(p,B[i].f))return B[i];return null};
 function* analyzeGen(id){setScale();const sc=scn,R=layers.find(l=>l.name==sc&&l.role=="riesgo"),k=R&&lfOf(R),out=[],E=layers.filter(l=>l.role=="expuesto"),tot=E.reduce((a,l)=>a+l.fc.features.length,0);let n=0;
- for(const l of E)for(const f of l.fc.features){if(++n%1000==0){if(id!==undefined&&id!==anaId)return null;yield[n,tot]}const pt=rep(f.geometry);if(!pt)continue;const u=B.length?unitOf(pt):{dep:"",pro:"",dis:""};if(!u)continue;let lv=0;if(R)lv=lvAt(R,k,pt);out.push({l:l.name,f,pt,nm:nmL(l,f),dep:u.dep,pro:u.pro,dis:u.dis,lv})}
+ for(const l of E)for(const f of l.fc.features){if(++n%1000==0){if(id!==undefined&&id!==anaId)return null;yield[n,tot]}let cc=UC.get(f);if(!cc){const q=rep(f.geometry);cc=q?{pt:q,u:B.length?unitOf(q):{dep:"",pro:"",dis:""}}:{pt:null};UC.set(f,cc)}const pt=cc.pt,u=cc.u;if(!pt||!u)continue;let lv=0;if(R)lv=lvAt(R,k,pt);out.push({l:l.name,f,pt,nm:nmL(l,f),dep:u.dep,pro:u.pro,dis:u.dis,lv})}
  if(id!==undefined&&id!==anaId)return null;return cache[sc]=out}
 function analyze(){if(cache[scn])return cache[scn];const g=analyzeGen();let r;while(!(r=g.next()).done);return r.value}
-async function prepare(){const id=++anaId;if(cache[scn])return;const g=analyzeGen(id),bz=$("busy");for(;;){const r=g.next();if(r.done){if(r.value===null)return;break}bz.style.display="block";bz.textContent="Analizando "+r.value[0].toLocaleString()+" / "+r.value[1].toLocaleString()+" elementos…";await new Promise(z=>setTimeout(z))}}
+async function prepare(){const id=++anaId;if(cache[scn])return;const g=analyzeGen(id),bz=$("busy");for(;;){const r=g.next();if(r.done){if(r.value===null)return;break}bz.style.display="block";bz.textContent="Analizando «"+scn+"» · "+Math.round(100*r.value[0]/r.value[1])+" %";await new Promise(z=>setTimeout(z))}}
 async function rebuild(){build(true);await prepare();render();panel();$("busy").style.display="none"}
 const inS=u=>(!sel.d||u.dep==sel.d)&&(!sel.p||u.pro==sel.p)&&(!sel.s||u.dis==sel.s);
 const uniq=a=>[...new Set(a)].sort();
@@ -119,19 +167,33 @@ function render(){setScale();const has=B.length>0;
  const all=analyze(),it=all.filter(inS),scope=B.filter(inS);
  $("mt").textContent=(scn||"Sin escenario de riesgo")+" – "+(sel.s||sel.p||sel.d||"Ámbito completo");lastIt=it;lastSc=scope;drawMap(it,scope,!keep);keep=false;
  const ex=uniq(it.map(i=>i.l)),cnt=l=>RG.map(v=>it.filter(i=>i.l==l&&i.lv==v).length);
- $("kp").innerHTML=[["Elementos analizados",it.length],[LV[N],it.filter(i=>i.lv==N).length],[LV[N-1],it.filter(i=>i.lv==N-1).length]].map(k=>`<div class="k"><small>${k[0]}</small><b>${k[1].toLocaleString()}</b></div>`).join("");
+ {const tt=it.length,c1=it.filter(i=>i.lv==N).length,c2=it.filter(i=>i.lv==N-1).length;$("kp").innerHTML=[["Elementos analizados",tt.toLocaleString(),"#1f5fa8"],["% en "+LV[N-1]+" + "+LV[N],(tt?100*(c1+c2)/tt:0).toFixed(1)+"%","#6b7785"]].map(k=>`<div class="k" style="border-left-color:${k[2]}"><small>${k[0]}</small><b>${k[1]}</b></div>`).join("")};
  $("tb").innerHTML="<tr><th>Capa</th>"+RG.map(v=>`<th style="color:${CO[v]}">${LV[v]}</th>`).join("")+"<th>Total</th></tr>"+(ex.map(l=>`<tr class="cl" data-l="${l}" ${l==open?'style="background:var(--bg);font-weight:700"':""}><td>▸ ${l}</td>${cnt(l).map(c=>`<td>${c}</td>`).join("")}<td>${it.filter(i=>i.l==l).length}</td></tr>`).join("")||"<tr><td>Sin capas de elementos expuestos</td></tr>");
- $("tb").querySelectorAll("tr.cl").forEach(r=>r.onclick=()=>{open=open==r.dataset.l?null:r.dataset.l;hl=null;keep=true;render()});detail(it);exec(it,scope)}
+ $("tb").querySelectorAll("tr.cl").forEach(r=>r.onclick=()=>{open=open==r.dataset.l?null:r.dataset.l;hl=null;keep=true;render();if(open)$("dt").scrollIntoView({behavior:"smooth",block:"nearest"})});stats(it);detail(it);exec(it,scope);setH()}
 function flt(it){const ls=uniq(it.map(i=>i.l));
  $("flt").innerHTML='<small class="mu">Mostrar:</small>'+[...RG].reverse().concat(0).map(v=>`<label style="font-size:12px"><input type="checkbox" data-v="${v}" ${hideLv.has(v)?"":"checked"}> <i style="display:inline-block;width:10px;height:10px;background:${CO[v]||"#9aa5b1"};border:1px solid #999"></i>${LV[v]||"Sin dato"}</label>`).join(" ")+(ls.length>1?" | "+ls.map(l=>`<label style="font-size:12px"><input type="checkbox" data-l="${l}" ${hideL.has(l)?"":"checked"}> ${l}</label>`).join(" "):"");
  $("flt").querySelectorAll("input").forEach(c=>c.onchange=()=>{const S=c.dataset.v!=null?hideLv:hideL,k=c.dataset.v!=null?+c.dataset.v:c.dataset.l;c.checked?S.delete(k):S.add(k);drawMap(lastIt,lastSc,false)})}
+function stats(it){const tot=it.length,lv0=[...RG].reverse().concat(0),cnt={},bl={};
+ it.forEach(i=>{cnt[i.lv]=(cnt[i.lv]||0)+1;const o=bl[i.l]||(bl[i.l]={});o[i.lv]=(o[i.lv]||0)+1});
+ const segs=lv0.map(v=>[v,cnt[v]||0]).filter(x=>x[1]>0),r=42,C=2*Math.PI*r;let off=0,arcs="";
+ segs.forEach(([v,c])=>{const len=C*c/tot;arcs+=`<circle r="${r}" cx="60" cy="60" fill="none" stroke="${FX(CO[v]||"#9aa5b1")}" stroke-width="18" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 60 60)"><title>${LV[v]||"Sin dato"}: ${c}</title></circle>`;off+=len});
+ $("ch1").innerHTML=tot?`<div class="dn"><svg viewBox="0 0 120 120" width="132" height="132">${arcs}<text x="60" y="58" text-anchor="middle" font-size="16" font-weight="700" fill="currentColor">${tot.toLocaleString()}</text><text x="60" y="72" text-anchor="middle" font-size="8" fill="#8b97a5">elementos</text></svg><div class="dl">${segs.map(([v,c])=>`<div><i style="background:${FX(CO[v]||"#9aa5b1")}"></i>${LV[v]||"Sin dato"}<b>${c.toLocaleString()}</b><span>${(100*c/tot).toFixed(1)}%</span></div>`).join("")}</div></div>`:'<small class="mu">Sin elementos expuestos en este ámbito</small>';
+ $("ch2").innerHTML=Object.keys(bl).sort().map(l=>{const o=bl[l],n=Object.values(o).reduce((a,b)=>a+b,0);return`<div class="sb"><div class="sbh"><span>${esc(l)}</span><b>${n.toLocaleString()}</b></div><div class="sbb">${lv0.map(v=>o[v]?`<span style="width:${100*o[v]/n}%;background:${FX(CO[v]||"#9aa5b1")}" title="${LV[v]||"Sin dato"}: ${o[v].toLocaleString()}"></span>`:"").join("")}</div></div>`}).join("")||'<small class="mu">Sin capas de elementos expuestos</small>';
+ const k=(sel.p||sel.s)?"dis":"pro",m={};it.forEach(i=>{const u=i[k]||"(sin ámbito)",o=m[u]||(m[u]={h:0,n:0,a:0,x:0});o.n++;if(i.lv==N){o.h++;o.x++}else if(i.lv==N-1){o.h++;o.a++}});
+ const rows=Object.entries(m).sort((a,b)=>b[1].h-a[1].h).slice(0,8),mx=Math.max(1,...rows.map(x=>x[1].h)),cA=FX(CO[N-1]),cX=FX(CO[N]);
+ $("ch3t").textContent="Mayor exposición por "+(k=="dis"?"distrito":"provincia");
+ $("ch3l").innerHTML=`<span><i style="background:${cX}"></i>${LV[N]}</span><span><i style="background:${cA}"></i>${LV[N-1]}</span>`;
+ $("ch3").innerHTML=rows.map(([u,o])=>`<div class="rk" data-u="${encodeURIComponent(u)}" data-k="${k}" title="${esc(u)}: ${o.x.toLocaleString()} en ${LV[N]} + ${o.a.toLocaleString()} en ${LV[N-1]} de ${o.n.toLocaleString()}"><span class="rn">${esc(u)}</span><span class="rbar"><i style="width:${100*o.x/mx}%;background:${cX}"></i><i style="width:${100*o.a/mx}%;background:${cA}"></i></span><span class="rv"><b>${o.h.toLocaleString()}</b><small class="mu"><span style="color:${cX}">●</span>${o.x.toLocaleString()} <span style="color:${cA}">●</span>${o.a.toLocaleString()}</small></span></div>`).join("")||'<small class="mu">Sin datos</small>';
+ $("ch3").querySelectorAll(".rk").forEach(e=>e.onclick=()=>{const u=decodeURIComponent(e.dataset.u),x=it.find(i=>i[e.dataset.k]==u);if(!x)return;sel.d=x.dep||sel.d;if(e.dataset.k=="pro"){sel.p=u;sel.s=""}else{sel.p=x.pro||sel.p;sel.s=u}open=null;hl=null;V=null;render()})}
+function setH(){const a=$("a");if(!a||a.classList.contains("hide"))return;if(innerWidth>900){const t=a.getBoundingClientRect().top+scrollY;a.style.setProperty("--vh",Math.max(460,innerHeight-t-14)+"px")}else a.style.removeProperty("--vh")}
+function fitMap(){const b=$("mapbox");if(!b)return false;const w=b.clientWidth,h=b.clientHeight;if(w>50&&h>50&&(w!==MW||h!==MH)){MW=w;MH=h;$("map").setAttribute("viewBox","0 0 "+w+" "+h);return true}return false}
 function detail(it){$("dt").classList.toggle("hide",!open);if(!open)return;$("dh").textContent="Detalle: "+open;const L0=layers.find(x=>x.name==open&&x.role=="expuesto"),dl=$("dlab");if(L0){dl.classList.remove("hide");dl.innerHTML=fieldsOf(L0).map(k=>`<option ${k==L0.lab?"selected":""}>${k}</option>`).join("");dl.onchange=()=>setLab(L0,dl.value)}else dl.classList.add("hide");
  const f=$("df");f.innerHTML='<option value="0">Todos los niveles</option>'+[...RG].reverse().map(v=>`<option value="${v}" ${f.dataset.v==v?"selected":""}>${LV[v]}</option>`).join("");f.onchange=()=>{f.dataset.v=f.value;detail(it)};
  const rows=it.filter(i=>i.l==open&&(!+f.dataset.v||i.lv==+f.dataset.v)).sort((a,b)=>b.lv-a.lv).slice(0,300);
  $("dtb").innerHTML="<tr><th>Nombre</th><th>Provincia</th><th>Distrito</th><th>Nivel</th><th></th></tr>"+rows.map((r,i)=>`<tr><td>${esc(r.nm)}</td><td>${r.pro}</td><td>${r.dis}</td><td><span class="pill" style="background:${CO[r.lv]||"#888"}">${LV[r.lv]||"Sin riesgo"}</span></td><td><button class="b" data-i="${i}">📍 Ubicar</button></td></tr>`).join("");
  $("dtb").querySelectorAll("button").forEach(b=>b.onclick=()=>{hl=rows[b.dataset.i];V={cx:mx(hl.pt[0]),cy:my(hl.pt[1]),z:14};keep=true;render();$("map").scrollIntoView({behavior:"smooth",block:"center"})})}
 let tf={x:0,y:0,k:1};
-function drawMap(it,scope,rf){const W=600,H=520;it=it.filter(i=>!hideLv.has(i.lv)&&!hideL.has(i.l)&&(!open||i.l==open));tf={x:0,y:0,k:1};
+function drawMap(it,scope,rf){const W=MW,H=MH;it=it.filter(i=>!hideLv.has(i.lv)&&!hideL.has(i.l)&&(!open||i.l==open));tf={x:0,y:0,k:1};
  if(rf||!V){const ext=scope.length?scope.map(u=>bb(u.f)):(layers.length?layers.flatMap(l=>l.fc.features.slice(0,2000)).map(bb):[[-79,-7,-78,-6]]),
   a=Math.min(...ext.map(e=>mx(e[0]))),c=Math.max(...ext.map(e=>mx(e[2]))),b=Math.min(...ext.map(e=>my(e[3]))),d=Math.max(...ext.map(e=>my(e[1])));
   V={cx:(a+c)/2,cy:(b+d)/2,z:Math.max(1,Math.min(17,Math.log2(Math.min((W-30)/((c-a)*TW||1),(H-30)/((d-b)*TW||1)))))}}
@@ -158,12 +220,27 @@ function drawMap(it,scope,rf){const W=600,H=520;it=it.filter(i=>!hideLv.has(i.lv
  if(hl){const[x,y]=P(hl.pt);o+=`<circle cx="${x}" cy="${y}" r="13" fill="none" stroke="#1f5fa8" stroke-width="3.5"/><text x="${+x+16}" y="${+y-10}" font-size="13" font-weight="700" fill="#111" stroke="#fff" stroke-width="3.5" paint-order="stroke">${esc(hl.nm)}</text>`}
  $("map").innerHTML=o+"</g>"}
 const GER=n=>/escu|educ|ie\b|colegio/i.test(n)?"DRE Cajamarca":/salud|estab/i.test(n)?"DIRESA":/v[ií]a|carre|vial/i.test(n)?"Gerencia de Infraestructura":/parcel|agr|cultiv/i.test(n)?"Gerencia de Desarrollo Económico":"Gerencia de Gestión del Riesgo";
-function exec(it,scope){const lev=sel.s?"s":sel.p?"s":sel.d?"p":"p",k=sel.p||sel.s?"dis":"pro",m={};
- it.forEach(i=>{const u=i[k]||"(sin ámbito)";(m[u]=m[u]||{s:0,L:{}});if(i.lv>=N-1){m[u].s+=i.lv==N?3:1;m[u].L[i.l]=(m[u].L[i.l]||0)+1}});
- const rows=Object.entries(m).sort((a,b)=>b[1].s-a[1].s),mx=Math.max(1,...rows.map(r=>r[1].s));
- $("eh").textContent="Prioridad de intervención – "+(k=="dis"?"distritos":"provincias")+" · "+(scn||"sin escenario");
- $("ex").innerHTML="<tr><th>"+(k=="dis"?"Distrito":"Provincia")+"</th><th>Semáforo</th><th>Elementos en riesgo alto/muy alto</th><th>Intervienen</th></tr>"+rows.map(([n,v])=>{const r=v.s/mx,t=r>=.6?["Rojo – crítico","#c62828"]:r>=.3?["Naranja – alto","#ef6c00"]:v.s>0?["Ámbar – vigilancia","#b88700"]:["Verde – normal","#43a047"],ls=Object.entries(v.L).sort((a,b)=>b[1]-a[1]);
-  return`<tr><td>${n}</td><td><span class="pill" style="background:${t[1]}">${t[0]}</span></td><td>${ls.map(([a,b])=>a+": "+b).join(" · ")||"—"}</td><td>${r>=.3?[...new Set(ls.map(l=>GER(l[0])))].join(", "):"Monitoreo"}</td></tr>`}).join("")}
+function exec(it,scope){
+ const k=(sel.p||sel.s)?"dis":"pro",kl=k=="dis"?"Distrito":"Provincia",ls=uniq(it.map(i=>i.l)),m={},tot=it.length,CL=[["Crítico","#c62828","≥ 50 %"],["Alto","#ef6c00","30 – 50 %"],["Vigilancia","#d6a500","10 – 30 %"],["Normal","#43a047","< 10 %"]];
+ it.forEach(i=>{const u=i[k]||"(sin ámbito)",o=m[u]||(m[u]={n:0,h:0,x:0,L:{}});o.n++;if(i.lv>=N-1){o.h++;if(i.lv==N)o.x++;o.L[i.l]=(o.L[i.l]||0)+1}});
+ const rows=Object.entries(m).map(([u,o])=>({u,...o,q:o.n?o.h/o.n:0})).sort((a,b)=>b.h-a.h||b.q-a.q);rows.forEach(r=>r.c=r.h==0?3:r.q>=.5?0:r.q>=.3?1:r.q>=.1?2:3);
+ const H=rows.reduce((a,r)=>a+r.h,0),R=layers.find(l=>l.name==scn&&l.role=="riesgo"),amb=sel.s||sel.p||sel.d||"todo el ámbito cargado",pc=tot?(100*H/tot).toFixed(1):"0";
+ const Lh={};rows.forEach(r=>Object.entries(r.L).forEach(([l,c])=>Lh[l]=(Lh[l]||0)+c));const tl=Object.entries(Lh).sort((a,b)=>b[1]-a[1])[0],top=rows.filter(r=>r.h>0).slice(0,3);
+ $("eh").textContent="Prioridad de intervención por "+kl.toLowerCase();
+ $("exn").innerHTML=!tot?"Cargue capas de elementos expuestos y un escenario de riesgo para ver el resumen.":`En el escenario <b>${R?esc(R.ent+" · "+R.comp):esc(scn)}</b> (${esc(amb)}), <b>${H.toLocaleString()}</b> de <b>${tot.toLocaleString()}</b> elementos expuestos (<b>${pc} %</b>) están en nivel <b>${LV[N-1]}</b> o <b>${LV[N]}</b>.`+(top.length?` Mayor concentración: ${top.map(r=>`<b>${esc(r.u)}</b> (${r.h.toLocaleString()} elementos, ${(100*r.q).toFixed(0)} % de lo que hay allí)`).join("; ")}.`:"")+(tl?` La capa más afectada es <b>${esc(tl[0])}</b> con ${tl[1].toLocaleString()} elementos en esos niveles; corresponde coordinar con <b>${GER(tl[0])}</b>.`:"");
+ $("exs").innerHTML=CL.map((x,i)=>`<div class="k" style="border-left-color:${x[1]}"><small>${x[0]} (${x[2]} en ${LV[N-1]}+${LV[N]})</small><b>${rows.filter(r=>r.c==i).length}</b><small>${kl.toLowerCase()==="distrito"?"distritos":"provincias"}</small></div>`).join("");
+ const mxL={};ls.forEach(l=>mxL[l]=Math.max(1,...rows.map(r=>r.L[l]||0)));
+ $("ex").innerHTML=`<tr><th>#</th><th>${kl}</th><th>Expuestos</th><th>${LV[N-1]} + ${LV[N]}</th><th>% del ámbito</th><th>Semáforo</th>${ls.map(l=>`<th title="Elementos en ${LV[N-1]}+${LV[N]}">${esc(l)}</th>`).join("")}<th>Intervienen</th></tr>`+rows.map((r,i)=>{const g=Object.entries(r.L).sort((a,b)=>b[1]-a[1]).slice(0,2).map(x=>GER(x[0])),gs=r.c<=2&&g.length?[...new Set(g)].join(", "):"Monitoreo";
+  return`<tr><td>${i+1}</td><td>${esc(r.u)}</td><td>${r.n.toLocaleString()}</td><td><b>${r.h.toLocaleString()}</b></td><td><span class="pb"><i style="width:${100*r.q}%;background:${CL[r.c][1]}"></i></span> ${(100*r.q).toFixed(0)} %</td><td><span class="pill" style="background:${CL[r.c][1]}">${CL[r.c][0]}</span></td>${ls.map(l=>{const c=r.L[l]||0;return`<td style="background:rgba(198,40,40,${(.5*c/mxL[l]).toFixed(2)})">${c?c.toLocaleString():"–"}</td>`}).join("")}<td style="white-space:normal;min-width:150px">${gs}</td></tr>`}).join("");
+ EXCSV="\ufeff"+[[kl,"Expuestos",LV[N-1]+"+"+LV[N],"% del ámbito","Semáforo",...ls].join(";")].concat(rows.map(r=>[r.u,r.n,r.h,(100*r.q).toFixed(1),CL[r.c][0],...ls.map(l=>r.L[l]||0)].join(";"))).join("\n");
+ $("exhow").innerHTML=`<p><b>${LV[N-1]} + ${LV[N]}:</b> elementos expuestos (colegios, establecimientos de salud, centros poblados, etc.) cuyo punto o centro cae dentro de zonas de nivel ${LV[N-1]} o ${LV[N]} del escenario elegido.</p><p><b>% del ámbito:</b> esos elementos entre el total de elementos expuestos de cada ${kl.toLowerCase()}.</p><p><b>Semáforo</b> (según ese %): <span style="color:#c62828">Crítico ≥ 50 %</span> · <span style="color:#ef6c00">Alto 30–50 %</span> · <span style="color:#b88700">Vigilancia 10–30 %</span> · <span style="color:#2e7d32">Normal &lt; 10 %</span>. Un ámbito con pocos elementos puede salir en rojo; por eso la tabla se ordena por <b>cantidad</b> de elementos afectados y no por el color.</p><p><b>Columnas por capa:</b> cuántos elementos de cada capa están en esos niveles; el tono rojo indica dónde se concentran. <b>Intervienen:</b> gerencia o dirección asignada a las capas con más elementos afectados (solo si el ámbito está en Vigilancia o peor).</p>`;
+ $("exlg").innerHTML=CL.map(x=>`<span><i style="background:${x[1]}"></i>${x[0]} ${x[2]}</span>`).join("")+'<span><i style="background:#cfd8dc"></i>Sin elementos</span>';
+ $("exmt").textContent="Mapa semáforo por "+kl.toLowerCase();semMap(Object.fromEntries(rows.map(r=>[r.u,r.c])),k,CL)}
+function semMap(cm,k,CL){const svg=$("exmap"),sc=B.filter(inS);if(!sc.length){svg.innerHTML='<text x="200" y="220" text-anchor="middle" fill="#8b97a5" font-size="13">Cargue la capa de límites para ver el mapa</text>';return}
+ const W=400,H=440;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;sc.forEach(u=>{const b=bb(u.f);x0=Math.min(x0,mx(b[0]));x1=Math.max(x1,mx(b[2]));y0=Math.min(y0,my(b[3]));y1=Math.max(y1,my(b[1]))});
+ const s=Math.min((W-20)/((x1-x0)||1),(H-20)/((y1-y0)||1)),ox=(W-(x1-x0)*s)/2,oy=(H-(y1-y0)*s)/2,g={},rp=r=>{let o="",lx=-9,ly=-9,n=0;for(const p of r){const x=ox+(mx(p[0])-x0)*s,y=oy+(my(p[1])-y0)*s;if(Math.abs(x-lx)+Math.abs(y-ly)<.8)continue;o+=(n?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);lx=x;ly=y;n++}return n>2?o+"Z":""};
+ sc.forEach(u=>{const c=u[k] in cm?cm[u[k]]:-1;g[c]=(g[c]||"")+polys(u.f.geometry).map(q=>q.map(rp).join("")).join("")});
+ svg.innerHTML=Object.entries(g).map(([c,p])=>`<path d="${p}" fill="${c==-1?"#cfd8dc":CL[c][1]}" stroke="#fff" stroke-width=".6" stroke-linejoin="round"/>`).join("")}
 function cfg(l,i){const op=(a,v)=>a.map(k=>`<option ${k==v?"selected":""}>${esc(k)}</option>`).join("");
  if(l.role=="riesgo")return `<input type="text" data-e="${i}" value="${esc(l.ent||"")}" size="9" placeholder="Entidad"> <input type="text" data-c="${i}" value="${esc(l.comp||"")}" size="15" placeholder="Componente"> <small class="mu">nivel:</small><select data-lf="${i}">${op(fieldsOf(l),lfOf(l))}</select><select data-ns="${i}"><option value="4" ${nsOf(l)==4?"selected":""}>4 niveles</option><option value="5" ${nsOf(l)==5?"selected":""}>5 niveles</option></select>`;
  if(l.role=="expuesto")return `<small class="mu">etiqueta:</small><select data-lab="${i}">${op(fieldsOf(l),l.lab)}</select>`;return "—"}
@@ -192,17 +269,19 @@ $("cl").onclick=()=>{layers=[];dbClear();rebuild()};$("dm").onclick=()=>{demo();
 
 $("sd").onchange=e=>{sel={d:e.target.value,p:"",s:""};hl=null;render()};$("sp").onchange=e=>{sel.p=e.target.value;sel.s="";hl=null;render()};$("ss").onchange=e=>{sel.s=e.target.value;hl=null;render()};
 $("rs").onclick=()=>{sel={d:"",p:"",s:""};open=null;hl=null;const r=layers.find(l=>l.role=="riesgo");scn=r?r.name:"";render()};
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x==b));["a","b","c"].forEach(i=>$(i).classList.toggle("hide",i!=b.dataset.t));$("bar").classList.toggle("hide",b.dataset.t=="c")});
-const mp=$("map");let dr=null,tm=null;const pk=e=>{const r=mp.getBoundingClientRect();return[(e.clientX-r.left)*600/r.width,(e.clientY-r.top)*520/r.height]};
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x==b));["a","b","c"].forEach(i=>$(i).classList.toggle("hide",i!=b.dataset.t));$("bar").classList.toggle("hide",b.dataset.t=="c");setH()});
+const mp=$("map");let dr=null,tm=null;const pk=e=>{const r=mp.getBoundingClientRect();return[(e.clientX-r.left)*MW/r.width,(e.clientY-r.top)*MH/r.height]};
 const ap=()=>{const g=$("vp");if(g)g.setAttribute("transform",`translate(${tf.x} ${tf.y}) scale(${tf.k})`)};
-const cm=()=>{clearTimeout(tm);if(!V||(tf.k==1&&!tf.x&&!tf.y))return;const s=TW*2**V.z,k=tf.k;V.cx+=((300-tf.x)/k-300)/s;V.cy+=((260-tf.y)/k-260)/s;V.z=Math.max(1,Math.min(19,V.z+Math.log2(k)));drawMap(lastIt,lastSc,false)};
-const dz=(f,p)=>{if(!V)return;p=p||[300,260];tf.x=p[0]-(p[0]-tf.x)*f;tf.y=p[1]-(p[1]-tf.y)*f;tf.k*=f;ap();clearTimeout(tm);tm=setTimeout(cm,160)};
+const cm=()=>{clearTimeout(tm);if(!V||(tf.k==1&&!tf.x&&!tf.y))return;const s=TW*2**V.z,k=tf.k;V.cx+=((MW/2-tf.x)/k-MW/2)/s;V.cy+=((MH/2-tf.y)/k-MH/2)/s;V.z=Math.max(1,Math.min(19,V.z+Math.log2(k)));drawMap(lastIt,lastSc,false)};
+const dz=(f,p)=>{if(!V)return;p=p||[MW/2,MH/2];tf.x=p[0]-(p[0]-tf.x)*f;tf.y=p[1]-(p[1]-tf.y)*f;tf.k*=f;ap();clearTimeout(tm);tm=setTimeout(cm,160)};
 mp.onpointerdown=e=>{dr=pk(e);mp.setPointerCapture(e.pointerId)};mp.onpointerup=()=>{if(dr){dr=null;cm()}};
 mp.onpointermove=e=>{if(!dr||!V)return;const p=pk(e);tf.x+=p[0]-dr[0];tf.y+=p[1]-dr[1];dr=p;ap()};
 mp.onwheel=e=>{e.preventDefault();dz(e.deltaY<0?1.41:.71,pk(e))};
-$("zi").onclick=()=>dz(2);$("zo").onclick=()=>dz(.5);$("zh").onclick=()=>drawMap(lastIt,lastSc,true);$("bm").onchange=()=>drawMap(lastIt,lastSc,false);$("rk").onclick=()=>{showRisk=!showRisk;$("rk").textContent="👁 Mapa de riesgo: "+(showRisk?"ON":"OFF");drawMap(lastIt,lastSc,false)};$("dx").onclick=()=>{open=null;hl=null;keep=true;render()};
+$("zi").onclick=()=>dz(2);$("zo").onclick=()=>dz(.5);$("zh").onclick=()=>drawMap(lastIt,lastSc,true);$("bm").onchange=()=>drawMap(lastIt,lastSc,false);$("rk").onclick=()=>{showRisk=!showRisk;$("rk").textContent="👁 Mapa de riesgo: "+(showRisk?"ON":"OFF");drawMap(lastIt,lastSc,false)};$("dx").onclick=()=>{open=null;hl=null;keep=true;render();if(open)$("dt").scrollIntoView({behavior:"smooth",block:"nearest"})};
 $("ps").oninput=()=>{psz=+$("ps").value;drawMap(lastIt,lastSc,false)};
+$("exc").onclick=()=>{if(!EXCSV)return;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([EXCSV],{type:"text/csv;charset=utf-8"}));a.download="prioridad_intervencion.csv";a.click()};
 demo();build();panel();
+setH();addEventListener("resize",()=>{setH()});if(window.ResizeObserver)new ResizeObserver(()=>{const first=!FIT;if(fitMap()){FIT=true;if(lastIt)drawMap(lastIt,lastSc,first)}}).observe($("mapbox"));
 const LECT=new URLSearchParams(location.search).get("modo")=="lectura";
 const toast=(t,ms)=>{const z=$("busy");z.style.display="block";z.textContent=t;if(ms)setTimeout(()=>z.style.display="none",ms)};
 const pm=t=>$("pms").textContent=t,nap=()=>new Promise(z=>setTimeout(z));
