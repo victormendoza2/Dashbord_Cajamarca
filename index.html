@@ -56,13 +56,21 @@ main{max-width:1760px;padding:12px 16px}
 .pb{display:inline-block;width:70px;height:8px;border-radius:4px;background:var(--bg);overflow:hidden;vertical-align:middle;margin-right:4px}.pb i{display:block;height:100%}
 .how{margin-top:10px;font-size:13px}.how summary{cursor:pointer;color:var(--ac);font-weight:600}.how p{margin:6px 0}
 #ex td:nth-child(2),#ex th:nth-child(2),#ex td:last-child,#ex th:last-child{text-align:left}
+
+.hlc{display:flex;align-items:center;gap:16px;border-left:10px solid #888;padding:16px 18px;flex-wrap:wrap}.hlp{color:#fff;font-weight:800;letter-spacing:1px;padding:10px 18px;border-radius:10px;font-size:20px}.hl1{font-size:20px;font-weight:700;line-height:1.25}.hl2{color:var(--mu);margin-top:4px;font-size:13px}
+.tc{display:flex;gap:12px;padding:10px;border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;cursor:pointer;align-items:flex-start}.tc:hover{background:var(--bg)}.tn{flex:none;width:30px;height:30px;border-radius:50%;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.tbd{flex:1;min-width:0}.tt{display:flex;justify-content:space-between;align-items:center;gap:8px}.tx{margin-top:3px}.ts{font-size:12.5px;color:var(--mu);margin-top:2px}
+.gcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px}.gc{border:1px solid var(--bd);border-left:6px solid #888;border-radius:10px;padding:10px 12px}
+details.card>summary{cursor:pointer;color:var(--ac);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 12px}.chip{display:flex;align-items:center;gap:7px;padding:7px 13px;border:2px solid var(--bd);border-radius:999px;background:var(--card);color:var(--tx);cursor:pointer;font:inherit;font-size:13px}.chip i{width:12px;height:12px;border-radius:50%;background:var(--cc,#888)}.chip.on{border-color:var(--cc,var(--ac));background:var(--bg);font-weight:700}
+#exlg span[data-c]:hover{text-decoration:underline}
 </style></head><body>
-<header><div><h1>Dashboard de Gestión de Riesgos – Cajamarca</h1><small>Escenarios CENEPRED · Avisos SENAMHI · Elementos expuestos</small></div><div class="by"><small>Elaborado por<br><b style="color:#fff">Victor Enrique Mendoza Astopilco</b><br>Especialista en SIG</small></div></header>
-<div class="tabs"><button class="tab on" data-t="a">Mapa y análisis</button><button class="tab" data-t="b">Módulo ejecutivo (semáforo)</button><button class="tab" data-t="c">Capas y fuentes</button></div>
+<header><div><h1>Dashboard de Gestión de Riesgos – Cajamarca</h1><small>Escenarios CENEPRED · Avisos SENAMHI · Elementos expuestos</small></div><div class="by"><small>Elaborado por<br><b style="color:#fff">Victor Enrique Mendoza Astopilco</b><br>Especialista SIG</small></div></header>
+<div class="tabs"><button class="tab on" data-t="a">Mapa y análisis</button><button class="tab" data-t="c">Capas y fuentes</button></div>
 <main>
 <div id="bar" class="bar">
 <select id="sd"></select><select id="sp"></select><select id="ss"></select>
-<select id="se"></select><select id="sk"></select><select id="bm"><option value="">Sin mapa base</option><option value="osm">Base: OpenStreetMap</option><option value="sat">Base: Google Satélite</option></select><button class="b rs" id="rs">✕ Limpiar selección</button></div>
+<select id="se"></select><select id="sk"></select><select id="bm"><option value="">Mapa base</option><option value="sat">Google Satélite</option></select><button class="b rs" id="rs">✕ Limpiar selección</button></div>
 
 <section id="a"><div class="view">
 <div class="mapcard"><div class="maphead"><h2 id="mt"></h2></div>
@@ -77,16 +85,6 @@ main{max-width:1760px;padding:12px 16px}
 <div class="card"><h2>Elementos expuestos (todas las capas analizadas)</h2><div class="ov"><table id="tb"></table></div><small class="mu">Clic en una capa para abrir su tabla y ubicar elementos en el mapa.</small></div>
 <div class="card hide" id="dt"><h2 id="dh"></h2><div class="bar"><select id="df"></select><small class="mu">Etiqueta:</small><select id="dlab"></select><button class="b" id="dx">✕ Cerrar tabla y mostrar todas las capas</button></div><div class="ov"><table id="dtb"></table></div></div>
 </div></div></section>
-
-<section id="b" class="hide">
-<div class="card"><h2>Resumen ejecutivo</h2><div id="exn" class="exn"></div></div>
-<div class="kpis4" id="exs"></div>
-<div class="exgrid">
-<div class="card"><h2 id="exmt">Mapa semáforo</h2><svg id="exmap" viewBox="0 0 400 440"></svg><div class="lg2" id="exlg" style="margin-top:8px"></div></div>
-<div class="card"><div class="exh"><h2 id="eh">Prioridad de intervención</h2><button class="b" id="exc">⬇ Exportar tabla (CSV)</button></div>
-<div class="ov" style="max-height:none"><table id="ex"></table></div>
-<details class="how"><summary>¿Cómo se lee esta tabla?</summary><div id="exhow"></div></details></div>
-</div></section>
 
 <section id="c" class="hide">
 <div class="card"><h2>Proyecto: guardar y abrir</h2>
@@ -134,22 +132,38 @@ const nmL=(l,f)=>{const v=l.lab&&f.properties?f.properties[l.lab]:null;return v!
 const fieldsOf=l=>[...new Set(l.fc.features.slice(0,300).flatMap(f=>Object.keys(f.properties||{})))],
 setLab=(l,v)=>{l.lab=v;dbPut(l);Object.values(cache).forEach(a=>a.forEach(i=>{if(i.l==l.name)i.nm=nmL(l,i.f)}));render();panel()};
 const nm=p=>{const k=key(p,/^(nombre|name|nom_|cen_edu|nom)/i);return k?p[k]:Object.values(p||{}).find(v=>typeof v=="string")||"s/n"};
-let MW=600,MH=520,FIT=false,UC=new WeakMap(),EXCSV="";const FX=c=>c=="#ffffff"?"#b0bec5":c;
+let EXA=[[],[]],EXK="",EXC=null,NOTES=[],MW=600,MH=520,FIT=false,UC=new WeakMap(),EXCSV="";const FX=c=>c=="#ffffff"?"#b0bec5":c;
 let hideLv=new Set(),hideL=new Set(),psz=3,lastN=0,showRisk=true,anaId=0;
 const DB=()=>new Promise((ok,ko)=>{const r=indexedDB.open("riesgos",1);r.onupgradeneeded=()=>r.result.createObjectStore("l",{keyPath:"id"});r.onsuccess=()=>ok(r.result);r.onerror=()=>ko(r.error)});
 const dbDo=async(m,f)=>{try{const d=await DB();return await new Promise((ok,ko)=>{const t=d.transaction("l",m),q=f(t.objectStore("l"));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>ko(t.error)})}catch(e){return null}};
-const dbPut=l=>dbDo("readwrite",o=>o.put({id:l.id,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns,fc:l.fc})),dbDel=id=>dbDo("readwrite",o=>o.delete(id)),dbClear=()=>dbDo("readwrite",o=>o.clear()),dbAll=async()=>(await dbDo("readonly",o=>o.getAll()))||[];
+const dbPut=l=>dbDo("readwrite",o=>o.put({id:l.id,name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns,resp:l.resp,disp:l.disp,fc:l.fc})),dbDel=id=>dbDo("readwrite",o=>o.delete(id)),dbClear=()=>dbDo("readwrite",o=>o.clear()),dbAll=async()=>(await dbDo("readonly",o=>o.getAll()))||[];
 function gridOf(R,FF){if(R._g)return R._g;const F=FF||R.fc.features,e=F.map(bb);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;e.forEach(b=>{if(b[0]<x0)x0=b[0];if(b[1]<y0)y0=b[1];if(b[2]>x1)x1=b[2];if(b[3]>y1)y1=b[3]});
  const n=Math.max(1,Math.min(256,Math.ceil(Math.sqrt(F.length/4)))),cw=(x1-x0)/n||1,ch=(y1-y0)/n||1,c=new Map();
  e.forEach((b,i)=>{const a=Math.floor((b[0]-x0)/cw),z=Math.min(n-1,Math.floor((b[2]-x0)/cw)),d=Math.floor((b[1]-y0)/ch),y=Math.min(n-1,Math.floor((b[3]-y0)/ch));for(let p=a;p<=z;p++)for(let q=d;q<=y;q++){const k=p*n+q;(c.get(k)||c.set(k,[]).get(k)).push(i)}});return R._g={x0,y0,cw,ch,n,c,F}}
 function lvAt(R,k,pt){const g=gridOf(R);let a=Math.floor((pt[0]-g.x0)/g.cw),d=Math.floor((pt[1]-g.y0)/g.ch);if(a<0||d<0||a>g.n||d>g.n)return 0;a=Math.min(a,g.n-1);d=Math.min(d,g.n-1);let lv=0;for(const i of g.c.get(a*g.n+d)||[]){const q=g.F[i];if(inF(pt,q))lv=Math.max(lv,lvl(q.properties[k]))}return lv}
 function addLayer(name,fc,demo){const fs=(fc.features||[]).filter(f=>f.geometry);if(!fs.length)return;const p=fs[0].properties||{},poly=/Polygon/.test(fs[0].geometry.type);
- const role=poly&&key(p,/^(distri|nombdist)/i)?"limite":poly&&key(p,/gridcode|niv|riesg|peligro|grado/i)?"riesgo":"expuesto";layers.push({name,fc:{features:fs},role,demo,lab:defLab(p),lf:key(p,/gridcode|niv|riesg|peligro|grado|susc|categ|clase/i)||"",ns:key(p,/gridcode/i)?5:4,...guess(name,p)})}
+ const role=poly&&key(p,/^(distri|nombdist)/i)?"limite":poly&&key(p,/gridcode|niv|riesg|peligro|grado/i)?"riesgo":"expuesto";layers.push({name,fc:{features:fs},role,demo,lab:defLab(p),disp:parseName(name).disp,resp:parseName(name).resp,lf:key(p,/gridcode|niv|riesg|peligro|grado|susc|categ|clase/i)||"",ns:key(p,/gridcode/i)?5:4,...guess(name,p)})}
 function build(skip){UC=new WeakMap();B=[];layers.filter(l=>l.role=="limite").forEach(l=>l.fc.features.forEach(f=>{const p=f.properties;B.push({f,dep:p[key(p,/^(depart|nombdep)/i)]||"",pro:p[key(p,/^(provin|nombprov)/i)]||"",dis:p[key(p,/^(distri|nombdist)/i)]||""})}));
  const r=layers.filter(l=>l.role=="riesgo");if(!r.find(l=>l.name==scn))scn=r[0]?r[0].name:"";cache={};sel={d:"",p:"",s:""};open=null;hl=null;V=null;if(!skip)render()}
 const unitOf=p=>{if(!B._g)gridOf(B,B.map(u=>u.f));const g=B._g;let a=Math.floor((p[0]-g.x0)/g.cw),d=Math.floor((p[1]-g.y0)/g.ch);if(a<0||d<0||a>g.n||d>g.n)return null;a=Math.min(a,g.n-1);d=Math.min(d,g.n-1);for(const i of g.c.get(a*g.n+d)||[])if(inF(p,B[i].f))return B[i];return null};
+const D2R=Math.PI/180;
+function dist(a,b){return Math.hypot((b[0]-a[0])*Math.cos((a[1]+b[1])/2*D2R)*111320,(b[1]-a[1])*110574)}
+function lineLen(g){const L=g.type=="LineString"?[g.coordinates]:g.coordinates;let s=0;for(const c of L)for(let i=0;i<c.length-1;i++)s+=dist(c[i],c[i+1]);return s}
+function ringArea(r){const c0=Math.cos(r[0][1]*D2R)*111320,c1=110574;let s=0;for(let i=0,n=r.length;i<n;i++){const a=r[i],b=r[(i+1)%n];s+=a[0]*c0*b[1]*c1-b[0]*c0*a[1]*c1}return Math.abs(s)/2}
+function polyArea(g){return polys(g).reduce((a,q)=>a+ringArea(q[0])-q.slice(1).reduce((b,h)=>b+ringArea(h),0),0)}
+// longitud por nivel: se recorre la vía en tramos y se afina (bisección) donde cambia el nivel
+function lineParts(g,R,k){const out={},add=(v,m)=>{out[v]=(out[v]||0)+m},L=p=>lvAt(R,k,p);
+ const sub=(a,b,la,lb,len,dp)=>{if(len<2||dp>=16){add(la,len/2);add(lb,len/2);return}const m=[(a[0]+b[0])/2,(a[1]+b[1])/2],lm=L(m);if(la===lb&&lm===la&&len<=100){add(la,len);return}sub(a,m,la,lm,len/2,dp+1);sub(m,b,lm,lb,len/2,dp+1)};
+ for(const c of g.type=="LineString"?[g.coordinates]:g.coordinates){let pl=null;for(let i=0;i<c.length-1;i++){const a=c[i],b=c[i+1],len=dist(a,b);if(len<=0)continue;const la=pl==null?L(a):pl,lb=L(b);sub(a,b,la,lb,len,0);pl=lb}}return out}
+// superficie por nivel: si todo el polígono cae en un nivel se asigna completo; si cruza varios, se muestrea en celdas
+function polyParts(f,R,k){const g=f.geometry,A=polyArea(g),b=bb(f);if(!(A>0))return{};
+ const grid=n=>{const cnt={};let ins=0;for(let i=0;i<n;i++)for(let j=0;j<n;j++){const p=[b[0]+(i+.5)/n*(b[2]-b[0]),b[1]+(j+.5)/n*(b[3]-b[1])];if(!inF(p,f))continue;ins++;const v=lvAt(R,k,p);cnt[v]=(cnt[v]||0)+1}return{cnt,ins}};
+ let r=grid(3);if(!r.ins)return{[lvAt(R,k,rep(g))]:A};const ks=Object.keys(r.cnt);if(ks.length==1)return{[ks[0]]:A};
+ r=grid(Math.min(24,Math.max(10,Math.ceil(Math.sqrt(A)/25))));if(!r.ins)return{[lvAt(R,k,rep(g))]:A};const o={};for(const[v,c]of Object.entries(r.cnt))o[v]=A*c/r.ins;return o}
+function fmtA(kind,v){return kind=="pg"?(v<10000?Math.round(v).toLocaleString()+" m²":(v/10000).toLocaleString(undefined,{maximumFractionDigits:2})+" ha"):(v<1000?Math.round(v).toLocaleString()+" m":(v/1000).toLocaleString(undefined,{maximumFractionDigits:2})+" km")}
+function fitTo(i){if(i.kind=="pt")return{cx:mx(i.pt[0]),cy:my(i.pt[1]),z:14};const b=bb(i.f),x0=mx(b[0]),x1=mx(b[2]),y0=my(b[3]),y1=my(b[1]);return{cx:(x0+x1)/2,cy:(y0+y1)/2,z:Math.max(8,Math.min(18,Math.log2(Math.min((MW-90)/((x1-x0)*256||1),(MH-90)/((y1-y0)*256||1)))))}}
 function* analyzeGen(id){setScale();const sc=scn,R=layers.find(l=>l.name==sc&&l.role=="riesgo"),k=R&&lfOf(R),out=[],E=layers.filter(l=>l.role=="expuesto"),tot=E.reduce((a,l)=>a+l.fc.features.length,0);let n=0;
- for(const l of E)for(const f of l.fc.features){if(++n%1000==0){if(id!==undefined&&id!==anaId)return null;yield[n,tot]}let cc=UC.get(f);if(!cc){const q=rep(f.geometry);cc=q?{pt:q,u:B.length?unitOf(q):{dep:"",pro:"",dis:""}}:{pt:null};UC.set(f,cc)}const pt=cc.pt,u=cc.u;if(!pt||!u)continue;let lv=0;if(R)lv=lvAt(R,k,pt);out.push({l:l.name,f,pt,nm:nmL(l,f),dep:u.dep,pro:u.pro,dis:u.dis,lv})}
+ for(const l of E)for(const f of l.fc.features){const gt=f.geometry?f.geometry.type:"",kind=/Polygon/.test(gt)?"pg":/Line/.test(gt)?"ln":"pt";if(++n%(kind=="pt"?1000:120)==0){if(id!==undefined&&id!==anaId)return null;yield[n,tot]}let cc=UC.get(f);if(!cc){const q=rep(f.geometry);cc=q?{pt:q,u:B.length?unitOf(q):{dep:"",pro:"",dis:""}}:{pt:null};UC.set(f,cc)}const pt=cc.pt,u=cc.u;if(!pt||!u)continue;let lv=0,amt=null,tt=0;if(kind=="pt"){if(R)lv=lvAt(R,k,pt)}else{amt=R?(kind=="pg"?polyParts(f,R,k):lineParts(f.geometry,R,k)):(kind=="pg"?{0:polyArea(f.geometry)}:{0:lineLen(f.geometry)});let best=-1;for(const[v,m]of Object.entries(amt)){tt+=m;if(m>best){best=m;lv=+v}}}out.push({l:l.name,f,pt,nm:nmL(l,f),dep:u.dep,pro:u.pro,dis:u.dis,lv,kind,amt,tot:tt})}
  if(id!==undefined&&id!==anaId)return null;return cache[sc]=out}
 function analyze(){if(cache[scn])return cache[scn];const g=analyzeGen();let r;while(!(r=g.next()).done);return r.value}
 async function prepare(){const id=++anaId;if(cache[scn])return;const g=analyzeGen(id),bz=$("busy");for(;;){const r=g.next();if(r.done){if(r.value===null)return;break}bz.style.display="block";bz.textContent="Analizando «"+scn+"» · "+Math.round(100*r.value[0]/r.value[1])+" %";await new Promise(z=>setTimeout(z))}}
@@ -168,17 +182,18 @@ function render(){setScale();const has=B.length>0;
  $("mt").textContent=(scn||"Sin escenario de riesgo")+" – "+(sel.s||sel.p||sel.d||"Ámbito completo");lastIt=it;lastSc=scope;drawMap(it,scope,!keep);keep=false;
  const ex=uniq(it.map(i=>i.l)),cnt=l=>RG.map(v=>it.filter(i=>i.l==l&&i.lv==v).length);
  {const tt=it.length,c1=it.filter(i=>i.lv==N).length,c2=it.filter(i=>i.lv==N-1).length;$("kp").innerHTML=[["Elementos analizados",tt.toLocaleString(),"#1f5fa8"],["% en "+LV[N-1]+" + "+LV[N],(tt?100*(c1+c2)/tt:0).toFixed(1)+"%","#6b7785"]].map(k=>`<div class="k" style="border-left-color:${k[2]}"><small>${k[0]}</small><b>${k[1]}</b></div>`).join("")};
- $("tb").innerHTML="<tr><th>Capa</th>"+RG.map(v=>`<th style="color:${CO[v]}">${LV[v]}</th>`).join("")+"<th>Total</th></tr>"+(ex.map(l=>`<tr class="cl" data-l="${l}" ${l==open?'style="background:var(--bg);font-weight:700"':""}><td>▸ ${l}</td>${cnt(l).map(c=>`<td>${c}</td>`).join("")}<td>${it.filter(i=>i.l==l).length}</td></tr>`).join("")||"<tr><td>Sin capas de elementos expuestos</td></tr>");
- $("tb").querySelectorAll("tr.cl").forEach(r=>r.onclick=()=>{open=open==r.dataset.l?null:r.dataset.l;hl=null;keep=true;render();if(open)$("dt").scrollIntoView({behavior:"smooth",block:"nearest"})});stats(it);detail(it);exec(it,scope);setH()}
+ const kd=l=>{const x=it.find(i=>i.l==l);return x?x.kind:"pt"},su=(l,v)=>it.reduce((a,i)=>a+(i.l==l&&i.amt&&i.amt[v]||0),0);
+ $("tb").innerHTML="<tr><th>Capa</th>"+RG.map(v=>`<th style="color:${CO[v]}">${LV[v]}</th>`).join("")+"<th>Total</th></tr>"+(ex.map(l=>{const k=kd(l),n=it.filter(i=>i.l==l).length;return`<tr class="cl" data-l="${l}" ${l==open?'style="background:var(--bg);font-weight:700"':""}><td>▸ ${esc(dn(l))}${k=="pt"?"":`<br><small class="mu">${k=="pg"?"superficie":"longitud"} por nivel · ${n.toLocaleString()} elem.</small>`}</td>${k=="pt"?cnt(l).map(c=>`<td>${c}</td>`).join(""):RG.map(v=>`<td>${fmtA(k,su(l,v))}</td>`).join("")}<td>${k=="pt"?n:fmtA(k,it.reduce((a,i)=>a+(i.l==l?i.tot:0),0))}</td></tr>`}).join("")||"<tr><td>Sin capas de elementos expuestos</td></tr>");
+ $("tb").querySelectorAll("tr.cl").forEach(r=>r.onclick=()=>{open=open==r.dataset.l?null:r.dataset.l;hl=null;keep=true;render();if(open)$("dt").scrollIntoView({behavior:"smooth",block:"nearest"})});stats(it);detail(it);setH()}
 function flt(it){const ls=uniq(it.map(i=>i.l));
  $("flt").innerHTML='<small class="mu">Mostrar:</small>'+[...RG].reverse().concat(0).map(v=>`<label style="font-size:12px"><input type="checkbox" data-v="${v}" ${hideLv.has(v)?"":"checked"}> <i style="display:inline-block;width:10px;height:10px;background:${CO[v]||"#9aa5b1"};border:1px solid #999"></i>${LV[v]||"Sin dato"}</label>`).join(" ")+(ls.length>1?" | "+ls.map(l=>`<label style="font-size:12px"><input type="checkbox" data-l="${l}" ${hideL.has(l)?"":"checked"}> ${l}</label>`).join(" "):"");
  $("flt").querySelectorAll("input").forEach(c=>c.onchange=()=>{const S=c.dataset.v!=null?hideLv:hideL,k=c.dataset.v!=null?+c.dataset.v:c.dataset.l;c.checked?S.delete(k):S.add(k);drawMap(lastIt,lastSc,false)})}
 function stats(it){const tot=it.length,lv0=[...RG].reverse().concat(0),cnt={},bl={};
- it.forEach(i=>{cnt[i.lv]=(cnt[i.lv]||0)+1;const o=bl[i.l]||(bl[i.l]={});o[i.lv]=(o[i.lv]||0)+1});
+ it.forEach(i=>{cnt[i.lv]=(cnt[i.lv]||0)+1;const o=bl[i.l]||(bl[i.l]={k:i.kind,n:0,w:{},t:0});o.n++;if(i.kind=='pt'){o.w[i.lv]=(o.w[i.lv]||0)+1;o.t++}else for(const[v,m]of Object.entries(i.amt||{})){o.w[v]=(o.w[v]||0)+m;o.t+=m}});
  const segs=lv0.map(v=>[v,cnt[v]||0]).filter(x=>x[1]>0),r=42,C=2*Math.PI*r;let off=0,arcs="";
  segs.forEach(([v,c])=>{const len=C*c/tot;arcs+=`<circle r="${r}" cx="60" cy="60" fill="none" stroke="${FX(CO[v]||"#9aa5b1")}" stroke-width="18" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 60 60)"><title>${LV[v]||"Sin dato"}: ${c}</title></circle>`;off+=len});
  $("ch1").innerHTML=tot?`<div class="dn"><svg viewBox="0 0 120 120" width="132" height="132">${arcs}<text x="60" y="58" text-anchor="middle" font-size="16" font-weight="700" fill="currentColor">${tot.toLocaleString()}</text><text x="60" y="72" text-anchor="middle" font-size="8" fill="#8b97a5">elementos</text></svg><div class="dl">${segs.map(([v,c])=>`<div><i style="background:${FX(CO[v]||"#9aa5b1")}"></i>${LV[v]||"Sin dato"}<b>${c.toLocaleString()}</b><span>${(100*c/tot).toFixed(1)}%</span></div>`).join("")}</div></div>`:'<small class="mu">Sin elementos expuestos en este ámbito</small>';
- $("ch2").innerHTML=Object.keys(bl).sort().map(l=>{const o=bl[l],n=Object.values(o).reduce((a,b)=>a+b,0);return`<div class="sb"><div class="sbh"><span>${esc(l)}</span><b>${n.toLocaleString()}</b></div><div class="sbb">${lv0.map(v=>o[v]?`<span style="width:${100*o[v]/n}%;background:${FX(CO[v]||"#9aa5b1")}" title="${LV[v]||"Sin dato"}: ${o[v].toLocaleString()}"></span>`:"").join("")}</div></div>`}).join("")||'<small class="mu">Sin capas de elementos expuestos</small>';
+ $("ch2").innerHTML=Object.keys(bl).sort().map(l=>{const o=bl[l],pt=o.k=="pt";return`<div class="sb"><div class="sbh"><span>${esc(dn(l))}</span><b>${pt?o.n.toLocaleString():o.n.toLocaleString()+" elem. · "+fmtA(o.k,o.t)}</b></div><div class="sbb">${lv0.map(v=>o.w[v]?`<span style="width:${100*o.w[v]/o.t}%;background:${FX(CO[v]||"#9aa5b1")}" title="${LV[v]||"Sin dato"}: ${pt?o.w[v].toLocaleString():fmtA(o.k,o.w[v])}"></span>`:"").join("")}</div></div>`}).join("")||'<small class="mu">Sin capas de elementos expuestos</small>';
  const k=(sel.p||sel.s)?"dis":"pro",m={};it.forEach(i=>{const u=i[k]||"(sin ámbito)",o=m[u]||(m[u]={h:0,n:0,a:0,x:0});o.n++;if(i.lv==N){o.h++;o.x++}else if(i.lv==N-1){o.h++;o.a++}});
  const rows=Object.entries(m).sort((a,b)=>b[1].h-a[1].h).slice(0,8),mx=Math.max(1,...rows.map(x=>x[1].h)),cA=FX(CO[N-1]),cX=FX(CO[N]);
  $("ch3t").textContent="Mayor exposición por "+(k=="dis"?"distrito":"provincia");
@@ -187,11 +202,11 @@ function stats(it){const tot=it.length,lv0=[...RG].reverse().concat(0),cnt={},bl
  $("ch3").querySelectorAll(".rk").forEach(e=>e.onclick=()=>{const u=decodeURIComponent(e.dataset.u),x=it.find(i=>i[e.dataset.k]==u);if(!x)return;sel.d=x.dep||sel.d;if(e.dataset.k=="pro"){sel.p=u;sel.s=""}else{sel.p=x.pro||sel.p;sel.s=u}open=null;hl=null;V=null;render()})}
 function setH(){const a=$("a");if(!a||a.classList.contains("hide"))return;if(innerWidth>900){const t=a.getBoundingClientRect().top+scrollY;a.style.setProperty("--vh",Math.max(460,innerHeight-t-14)+"px")}else a.style.removeProperty("--vh")}
 function fitMap(){const b=$("mapbox");if(!b)return false;const w=b.clientWidth,h=b.clientHeight;if(w>50&&h>50&&(w!==MW||h!==MH)){MW=w;MH=h;$("map").setAttribute("viewBox","0 0 "+w+" "+h);return true}return false}
-function detail(it){$("dt").classList.toggle("hide",!open);if(!open)return;$("dh").textContent="Detalle: "+open;const L0=layers.find(x=>x.name==open&&x.role=="expuesto"),dl=$("dlab");if(L0){dl.classList.remove("hide");dl.innerHTML=fieldsOf(L0).map(k=>`<option ${k==L0.lab?"selected":""}>${k}</option>`).join("");dl.onchange=()=>setLab(L0,dl.value)}else dl.classList.add("hide");
+function detail(it){$("dt").classList.toggle("hide",!open);if(!open)return;$("dh").textContent="Detalle: "+dn(open);const L0=layers.find(x=>x.name==open&&x.role=="expuesto"),dl=$("dlab");if(L0){dl.classList.remove("hide");dl.innerHTML=fieldsOf(L0).map(k=>`<option ${k==L0.lab?"selected":""}>${k}</option>`).join("");dl.onchange=()=>setLab(L0,dl.value)}else dl.classList.add("hide");
  const f=$("df");f.innerHTML='<option value="0">Todos los niveles</option>'+[...RG].reverse().map(v=>`<option value="${v}" ${f.dataset.v==v?"selected":""}>${LV[v]}</option>`).join("");f.onchange=()=>{f.dataset.v=f.value;detail(it)};
  const rows=it.filter(i=>i.l==open&&(!+f.dataset.v||i.lv==+f.dataset.v)).sort((a,b)=>b.lv-a.lv).slice(0,300);
- $("dtb").innerHTML="<tr><th>Nombre</th><th>Provincia</th><th>Distrito</th><th>Nivel</th><th></th></tr>"+rows.map((r,i)=>`<tr><td>${esc(r.nm)}</td><td>${r.pro}</td><td>${r.dis}</td><td><span class="pill" style="background:${CO[r.lv]||"#888"}">${LV[r.lv]||"Sin riesgo"}</span></td><td><button class="b" data-i="${i}">📍 Ubicar</button></td></tr>`).join("");
- $("dtb").querySelectorAll("button").forEach(b=>b.onclick=()=>{hl=rows[b.dataset.i];V={cx:mx(hl.pt[0]),cy:my(hl.pt[1]),z:14};keep=true;render();$("map").scrollIntoView({behavior:"smooth",block:"center"})})}
+ $("dtb").innerHTML="<tr><th>Nombre</th><th>Provincia</th><th>Distrito</th><th>Nivel (predominante)</th><th>Por nivel</th><th></th></tr>"+rows.map((r,i)=>`<tr><td>${esc(r.nm)}</td><td>${r.pro}</td><td>${r.dis}</td><td><span class="pill" style="background:${CO[r.lv]||"#888"}">${LV[r.lv]||"Sin riesgo"}</span></td><td style="white-space:normal;min-width:170px">${r.kind=="pt"?"—":Object.entries(r.amt||{}).sort((a,b)=>b[0]-a[0]).map(([v,m])=>`<span class="pill" style="background:${CO[v]||"#888"}">${LV[v]||"Sin dato"}</span> ${fmtA(r.kind,m)}`).join("<br>")}</td><td><button class="b" data-i="${i}">📍 Ubicar</button></td></tr>`).join("");
+ $("dtb").querySelectorAll("button").forEach(b=>b.onclick=()=>{hl=rows[b.dataset.i];V=fitTo(hl);keep=true;render();$("map").scrollIntoView({behavior:"smooth",block:"center"})})}
 let tf={x:0,y:0,k:1};
 function drawMap(it,scope,rf){const W=MW,H=MH;it=it.filter(i=>!hideLv.has(i.lv)&&!hideL.has(i.l)&&(!open||i.l==open));tf={x:0,y:0,k:1};
  if(rf||!V){const ext=scope.length?scope.map(u=>bb(u.f)):(layers.length?layers.flatMap(l=>l.fc.features.slice(0,2000)).map(bb):[[-79,-7,-78,-6]]),
@@ -205,47 +220,35 @@ function drawMap(it,scope,rf){const W=MW,H=MH;it=it.filter(i=>!hideLv.has(i.lv)&
  path=g=>polys(g).map(q=>q.map(rp).join("")).join(""),line=c=>"M"+c.map(P).join("L");
  const R=layers.find(l=>l.name==scn&&l.role=="riesgo"),rk=R&&lfOf(R),bm=$("bm").value,cl=!!(sel.d||sel.p||sel.s);let t="";
  if(bm){const zt=Math.max(1,Math.min(19,Math.round(V.z))),n=2**zt,ts=s/n,i0=Math.floor((V.cx-W/2/s)*n),i1=Math.floor((V.cx+W/2/s)*n),j0=Math.max(0,Math.floor((V.cy-H/2/s)*n)),j1=Math.min(n-1,Math.floor((V.cy+H/2/s)*n));
-  for(let i=i0;i<=i1&&i1-i0<16;i++)for(let j=j0;j<=j1;j++){const ii=((i%n)+n)%n;t+=`<image href="${bm=="osm"?`https://tile.openstreetmap.org/${zt}/${ii}/${j}.png`:`https://mt1.google.com/vt/lyrs=s&amp;x=${ii}&amp;y=${j}&amp;z=${zt}`}" x="${X(i/n)}" y="${Y(j/n)}" width="${ts+.6}" height="${ts+.6}" preserveAspectRatio="none"/>`}}
+  for(let i=i0;i<=i1&&i1-i0<16;i++)for(let j=j0;j<=j1;j++){const ii=((i%n)+n)%n;t+=`<image href="${`https://mt1.google.com/vt/lyrs=s&amp;x=${ii}&amp;y=${j}&amp;z=${zt}`}" x="${X(i/n)}" y="${Y(j/n)}" width="${ts+.6}" height="${ts+.6}" preserveAspectRatio="none"/>`}}
  let o=`<rect width="${W}" height="${H}" fill="${bm?"#cfd8dc":"transparent"}"/><g id="vp">${t}`;
  if(cl)o+=`<defs><clipPath id="cp">${scope.filter(u=>ok(u.f)).map(u=>`<path d="${path(u.f.geometry)}"/>`).join("")}</clipPath></defs>`;
  o+=`<path d="${B.filter(u=>ok(u.f)).map(u=>path(u.f.geometry)).join("")}" fill="none" stroke="#9aa5b1" stroke-width=".6"/>`;
- if(R&&showRisk){const gp={};R.fc.features.filter(ok).forEach(f=>{const v=lvl(f.properties[rk]);gp[v]=(gp[v]||"")+path(f.geometry)});o+=`<g ${cl?'clip-path="url(#cp)"':""}>`+Object.entries(gp).map(([v,d])=>`<path d="${d}" fill="${CO[v]||"#9aa5b1"}" fill-opacity="${bm?.6:.8}"/>`).join("")+"</g>"}
+ let gp=null;if(R){gp={};R.fc.features.filter(ok).forEach(f=>{const v=lvl(f.properties[rk]);gp[v]=(gp[v]||"")+path(f.geometry)});if(showRisk)o+=`<g ${cl?'clip-path="url(#cp)"':""}>`+Object.entries(gp).map(([v,d])=>`<path d="${d}" fill="${CO[v]||"#9aa5b1"}" fill-opacity="${bm?.6:.8}"/>`).join("")+"</g>"}
  if(cl)o+=`<path d="${scope.filter(u=>ok(u.f)).map(u=>path(u.f.geometry)).join("")}" fill="none" stroke="${bm=="sat"?"#fff":"#18222d"}" stroke-width="${sel.s||sel.p?2.2:1.5}"/>`;
  const rr=psz*Math.max(.35,Math.min(1.6,.35+(V.z-7)*.12)),dp={},dl={},dg={},fx=c=>c=="#ffffff"?"#b0bec5":c;
- it.forEach(i=>{const g=i.f.geometry,w=[mx(i.pt[0]),my(i.pt[1])];if(w[0]<vx0||w[0]>vx1||w[1]<vy0||w[1]>vy1)return;const v=i.lv;
-  if(/Line/.test(g.type))dl[v]=(dl[v]||"")+(g.type=="LineString"?[g.coordinates]:g.coordinates).map(line).join("");else if(/Polygon/.test(g.type))dg[v]=(dg[v]||"")+path(g);else{const[x,y]=P(i.pt);dp[v]=(dp[v]||"")+"M"+x+" "+y+"h.01"}});
- for(const[v,d]of Object.entries(dg))o+=`<path d="${d}" fill="${fx(CO[v]||"#777")}" stroke="#333" stroke-width=".4"/>`;
- for(const[v,d]of Object.entries(dl))o+=`<path d="${d}" stroke="${fx(CO[v]||"#777")}" stroke-width="${Math.max(1,rr*.7).toFixed(1)}" fill="none"/>`;
+ let pgA="",lnA="";it.forEach(i=>{const g=i.f.geometry,v=i.lv;
+  if(i.kind=="pt"){const w=[mx(i.pt[0]),my(i.pt[1])];if(w[0]<vx0||w[0]>vx1||w[1]<vy0||w[1]>vy1)return;const[x,y]=P(i.pt);dp[v]=(dp[v]||"")+"M"+x+" "+y+"h.01";return}
+  if(!ok(i.f))return;if(i.kind=="ln")lnA+=(g.type=="LineString"?[g.coordinates]:g.coordinates).map(line).join("");else pgA+=path(g)});
+ const lw=Math.max(1.6,rr*.8).toFixed(1);
+ if(pgA){o+=`<path d="${pgA}" fill="#9aa5b1" fill-opacity=".38" stroke="#6b7785" stroke-width=".5"/>`;if(gp)o+=`<clipPath id="cpg"><path d="${pgA}"/></clipPath><g clip-path="url(#cpg)">`+Object.entries(gp).map(([v,dd])=>`<path d="${dd}" fill="${fx(CO[v]||"#9aa5b1")}"/>`).join("")+`</g><path d="${pgA}" fill="none" stroke="#18222d" stroke-width=".7"/>`}
+ if(lnA){o+=`<path d="${lnA}" stroke="#18222d" stroke-opacity=".6" stroke-width="${(+lw+2).toFixed(1)}" fill="none" stroke-linejoin="round"/><path d="${lnA}" stroke="#9aa5b1" stroke-width="${lw}" fill="none" stroke-linejoin="round"/>`;if(gp)o+=Object.entries(gp).map(([v,dd])=>`<clipPath id="cln${v}"><path d="${dd}"/></clipPath><g clip-path="url(#cln${v})"><path d="${lnA}" stroke="${fx(CO[v]||"#9aa5b1")}" stroke-width="${lw}" fill="none" stroke-linejoin="round"/></g>`).join("")}
  for(const[v,d]of Object.entries(dp))o+=`<path d="${d}" stroke="${fx(CO[v]||"#777")}" stroke-width="${(2*rr).toFixed(1)}" stroke-linecap="round" fill="none"/>`;
- if(hl){const[x,y]=P(hl.pt);o+=`<circle cx="${x}" cy="${y}" r="13" fill="none" stroke="#1f5fa8" stroke-width="3.5"/><text x="${+x+16}" y="${+y-10}" font-size="13" font-weight="700" fill="#111" stroke="#fff" stroke-width="3.5" paint-order="stroke">${esc(hl.nm)}</text>`}
+ if(hl){const[x,y]=P(hl.pt);{const hg=hl.f.geometry,hp=/Line/.test(hg.type)?(hg.type=="LineString"?[hg.coordinates]:hg.coordinates).map(line).join(""):/Polygon/.test(hg.type)?path(hg):"";if(hp)o+=`<path d="${hp}" fill="none" stroke="#1f5fa8" stroke-width="3.5" stroke-linejoin="round"/>`}o+=`<circle cx="${x}" cy="${y}" r="13" fill="none" stroke="#1f5fa8" stroke-width="3.5"/><text x="${+x+16}" y="${+y-10}" font-size="13" font-weight="700" fill="#111" stroke="#fff" stroke-width="3.5" paint-order="stroke">${esc(hl.nm)}</text>`}
  $("map").innerHTML=o+"</g>"}
-const GER=n=>/escu|educ|ie\b|colegio/i.test(n)?"DRE Cajamarca":/salud|estab/i.test(n)?"DIRESA":/v[ií]a|carre|vial/i.test(n)?"Gerencia de Infraestructura":/parcel|agr|cultiv/i.test(n)?"Gerencia de Desarrollo Económico":"Gerencia de Gestión del Riesgo";
-function exec(it,scope){
- const k=(sel.p||sel.s)?"dis":"pro",kl=k=="dis"?"Distrito":"Provincia",ls=uniq(it.map(i=>i.l)),m={},tot=it.length,CL=[["Crítico","#c62828","≥ 50 %"],["Alto","#ef6c00","30 – 50 %"],["Vigilancia","#d6a500","10 – 30 %"],["Normal","#43a047","< 10 %"]];
- it.forEach(i=>{const u=i[k]||"(sin ámbito)",o=m[u]||(m[u]={n:0,h:0,x:0,L:{}});o.n++;if(i.lv>=N-1){o.h++;if(i.lv==N)o.x++;o.L[i.l]=(o.L[i.l]||0)+1}});
- const rows=Object.entries(m).map(([u,o])=>({u,...o,q:o.n?o.h/o.n:0})).sort((a,b)=>b.h-a.h||b.q-a.q);rows.forEach(r=>r.c=r.h==0?3:r.q>=.5?0:r.q>=.3?1:r.q>=.1?2:3);
- const H=rows.reduce((a,r)=>a+r.h,0),R=layers.find(l=>l.name==scn&&l.role=="riesgo"),amb=sel.s||sel.p||sel.d||"todo el ámbito cargado",pc=tot?(100*H/tot).toFixed(1):"0";
- const Lh={};rows.forEach(r=>Object.entries(r.L).forEach(([l,c])=>Lh[l]=(Lh[l]||0)+c));const tl=Object.entries(Lh).sort((a,b)=>b[1]-a[1])[0],top=rows.filter(r=>r.h>0).slice(0,3);
- $("eh").textContent="Prioridad de intervención por "+kl.toLowerCase();
- $("exn").innerHTML=!tot?"Cargue capas de elementos expuestos y un escenario de riesgo para ver el resumen.":`En el escenario <b>${R?esc(R.ent+" · "+R.comp):esc(scn)}</b> (${esc(amb)}), <b>${H.toLocaleString()}</b> de <b>${tot.toLocaleString()}</b> elementos expuestos (<b>${pc} %</b>) están en nivel <b>${LV[N-1]}</b> o <b>${LV[N]}</b>.`+(top.length?` Mayor concentración: ${top.map(r=>`<b>${esc(r.u)}</b> (${r.h.toLocaleString()} elementos, ${(100*r.q).toFixed(0)} % de lo que hay allí)`).join("; ")}.`:"")+(tl?` La capa más afectada es <b>${esc(tl[0])}</b> con ${tl[1].toLocaleString()} elementos en esos niveles; corresponde coordinar con <b>${GER(tl[0])}</b>.`:"");
- $("exs").innerHTML=CL.map((x,i)=>`<div class="k" style="border-left-color:${x[1]}"><small>${x[0]} (${x[2]} en ${LV[N-1]}+${LV[N]})</small><b>${rows.filter(r=>r.c==i).length}</b><small>${kl.toLowerCase()==="distrito"?"distritos":"provincias"}</small></div>`).join("");
- const mxL={};ls.forEach(l=>mxL[l]=Math.max(1,...rows.map(r=>r.L[l]||0)));
- $("ex").innerHTML=`<tr><th>#</th><th>${kl}</th><th>Expuestos</th><th>${LV[N-1]} + ${LV[N]}</th><th>% del ámbito</th><th>Semáforo</th>${ls.map(l=>`<th title="Elementos en ${LV[N-1]}+${LV[N]}">${esc(l)}</th>`).join("")}<th>Intervienen</th></tr>`+rows.map((r,i)=>{const g=Object.entries(r.L).sort((a,b)=>b[1]-a[1]).slice(0,2).map(x=>GER(x[0])),gs=r.c<=2&&g.length?[...new Set(g)].join(", "):"Monitoreo";
-  return`<tr><td>${i+1}</td><td>${esc(r.u)}</td><td>${r.n.toLocaleString()}</td><td><b>${r.h.toLocaleString()}</b></td><td><span class="pb"><i style="width:${100*r.q}%;background:${CL[r.c][1]}"></i></span> ${(100*r.q).toFixed(0)} %</td><td><span class="pill" style="background:${CL[r.c][1]}">${CL[r.c][0]}</span></td>${ls.map(l=>{const c=r.L[l]||0;return`<td style="background:rgba(198,40,40,${(.5*c/mxL[l]).toFixed(2)})">${c?c.toLocaleString():"–"}</td>`}).join("")}<td style="white-space:normal;min-width:150px">${gs}</td></tr>`}).join("");
- EXCSV="\ufeff"+[[kl,"Expuestos",LV[N-1]+"+"+LV[N],"% del ámbito","Semáforo",...ls].join(";")].concat(rows.map(r=>[r.u,r.n,r.h,(100*r.q).toFixed(1),CL[r.c][0],...ls.map(l=>r.L[l]||0)].join(";"))).join("\n");
- $("exhow").innerHTML=`<p><b>${LV[N-1]} + ${LV[N]}:</b> elementos expuestos (colegios, establecimientos de salud, centros poblados, etc.) cuyo punto o centro cae dentro de zonas de nivel ${LV[N-1]} o ${LV[N]} del escenario elegido.</p><p><b>% del ámbito:</b> esos elementos entre el total de elementos expuestos de cada ${kl.toLowerCase()}.</p><p><b>Semáforo</b> (según ese %): <span style="color:#c62828">Crítico ≥ 50 %</span> · <span style="color:#ef6c00">Alto 30–50 %</span> · <span style="color:#b88700">Vigilancia 10–30 %</span> · <span style="color:#2e7d32">Normal &lt; 10 %</span>. Un ámbito con pocos elementos puede salir en rojo; por eso la tabla se ordena por <b>cantidad</b> de elementos afectados y no por el color.</p><p><b>Columnas por capa:</b> cuántos elementos de cada capa están en esos niveles; el tono rojo indica dónde se concentran. <b>Intervienen:</b> gerencia o dirección asignada a las capas con más elementos afectados (solo si el ámbito está en Vigilancia o peor).</p>`;
- $("exlg").innerHTML=CL.map(x=>`<span><i style="background:${x[1]}"></i>${x[0]} ${x[2]}</span>`).join("")+'<span><i style="background:#cfd8dc"></i>Sin elementos</span>';
- $("exmt").textContent="Mapa semáforo por "+kl.toLowerCase();semMap(Object.fromEntries(rows.map(r=>[r.u,r.c])),k,CL)}
-function semMap(cm,k,CL){const svg=$("exmap"),sc=B.filter(inS);if(!sc.length){svg.innerHTML='<text x="200" y="220" text-anchor="middle" fill="#8b97a5" font-size="13">Cargue la capa de límites para ver el mapa</text>';return}
- const W=400,H=440;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;sc.forEach(u=>{const b=bb(u.f);x0=Math.min(x0,mx(b[0]));x1=Math.max(x1,mx(b[2]));y0=Math.min(y0,my(b[3]));y1=Math.max(y1,my(b[1]))});
- const s=Math.min((W-20)/((x1-x0)||1),(H-20)/((y1-y0)||1)),ox=(W-(x1-x0)*s)/2,oy=(H-(y1-y0)*s)/2,g={},rp=r=>{let o="",lx=-9,ly=-9,n=0;for(const p of r){const x=ox+(mx(p[0])-x0)*s,y=oy+(my(p[1])-y0)*s;if(Math.abs(x-lx)+Math.abs(y-ly)<.8)continue;o+=(n?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);lx=x;ly=y;n++}return n>2?o+"Z":""};
- sc.forEach(u=>{const c=u[k] in cm?cm[u[k]]:-1;g[c]=(g[c]||"")+polys(u.f.geometry).map(q=>q.map(rp).join("")).join("")});
- svg.innerHTML=Object.entries(g).map(([c,p])=>`<path d="${p}" fill="${c==-1?"#cfd8dc":CL[c][1]}" stroke="#fff" stroke-width=".6" stroke-linejoin="round"/>`).join("")}
+const GER=n=>/escu|educ|iiee|colegio/i.test(n)?"DRE Cajamarca":/salud|estab|eess|ipress/i.test(n)?"DIRESA Cajamarca":/v[ií]a|carre|vial/i.test(n)?"Gerencia de Infraestructura":/parcel|predio|agr|cultiv/i.test(n)?"Gerencia de Desarrollo Económico":"";
+const SMALL=new Set(["de","del","la","las","los","el","y","en","para"]),tc=s=>s.replace(/_+/g," ").replace(/\s+/g," ").trim().split(" ").map((w,i)=>i&&SMALL.has(w.toLowerCase())?w.toLowerCase():w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(" ");
+function parseName(n){const s=String(n).replace(/\.\w+$/,"").trim();let left=s,right="";
+ if(s.includes("__")){const p=s.split("__");left=p[0];right=p.slice(1).join(" ")}
+ else{const m=s.match(/(?:^|[_\s-])(direcci[oó]n|gerencia|subgerencia|oficina|diresa|dre|dra|serfor|sgat|stgrd)(?=$|[_\s-])/i);if(m&&m.index>0){left=s.slice(0,m.index);right=s.slice(m.index+m[0].indexOf(m[1]))}}
+ return{disp:right?(tc(left)||String(n)):String(n),resp:right?tc(right):""}}
+const getResp=l=>(l.resp!=null?l.resp:parseName(l.name).resp)||GER(l.name)||"Sin asignar",dn=n=>{const l=layers.find(x=>x.name==n);return l?(l.disp||parseName(l.name).disp):n};
 function cfg(l,i){const op=(a,v)=>a.map(k=>`<option ${k==v?"selected":""}>${esc(k)}</option>`).join("");
  if(l.role=="riesgo")return `<input type="text" data-e="${i}" value="${esc(l.ent||"")}" size="9" placeholder="Entidad"> <input type="text" data-c="${i}" value="${esc(l.comp||"")}" size="15" placeholder="Componente"> <small class="mu">nivel:</small><select data-lf="${i}">${op(fieldsOf(l),lfOf(l))}</select><select data-ns="${i}"><option value="4" ${nsOf(l)==4?"selected":""}>4 niveles</option><option value="5" ${nsOf(l)==5?"selected":""}>5 niveles</option></select>`;
  if(l.role=="expuesto")return `<small class="mu">etiqueta:</small><select data-lab="${i}">${op(fieldsOf(l),l.lab)}</select>`;return "—"}
-function panel(){$("lt").innerHTML="<tr><th>Capa</th><th>Entidades</th><th>Rol</th><th>Configuración</th><th></th></tr>"+layers.map((l,i)=>`<tr><td>${l.name}${l.demo?" (demo)":""}</td><td>${l.fc.features.length}</td><td><select data-i="${i}">${["limite","riesgo","expuesto"].map(r=>`<option ${r==l.role?"selected":""}>${r}</option>`).join("")}</select></td><td>${cfg(l,i)}</td><td><button class="b" data-x="${i}">✕</button></td></tr>`).join("");
+function panel(){{const z=$("rsl");if(z)z.innerHTML=[...new Set([...layers.filter(l=>l.role=="expuesto").map(getResp),"DRE Cajamarca","DIRESA Cajamarca"])].filter(x=>x!="Sin asignar").map(x=>`<option value="${esc(x)}">`).join("")}$("lt").innerHTML="<tr><th>Capa</th><th>Entidades</th><th>Rol</th><th>Configuración</th><th></th></tr>"+layers.map((l,i)=>`<tr><td>${l.name}${l.demo?" (demo)":""}</td><td>${l.fc.features.length}</td><td><select data-i="${i}">${["limite","riesgo","expuesto"].map(r=>`<option ${r==l.role?"selected":""}>${r}</option>`).join("")}</select></td><td>${cfg(l,i)}</td><td><button class="b" data-x="${i}">✕</button></td></tr>`).join("");
  $("lt").querySelectorAll("select[data-lab]").forEach(s=>s.onchange=()=>setLab(layers[s.dataset.lab],s.value));
+ $("lt").querySelectorAll("input[data-r]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.r];l.resp=s.value.trim();dbPut(l);render();panel()});
  $("lt").querySelectorAll("input[data-e]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.e];l.ent=s.value.trim()||"Otra";dbPut(l);render();panel()});
  $("lt").querySelectorAll("input[data-c]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.c];l.comp=s.value.trim()||"Escenario";dbPut(l);render();panel()});
  $("lt").querySelectorAll("select[data-lf]").forEach(s=>s.onchange=()=>{const l=layers[s.dataset.lf];l.lf=s.value;dbPut(l);rebuild()});
@@ -260,7 +263,7 @@ function demo(){layers=[];const PN={"San Ignacio":[0,0],"Jaén":[1,0],"Cutervo":
  pts("Centros educativos",420,"I.E. N°");pts("Establecimientos de salud",90,"P.S.");
  const v=[];for(let i=0;i<70;i++){const a=X0+rn()*1.4,b=Y1-rn()*3.3;v.push({type:"Feature",properties:{NOMBRE:"Vía "+(i+1)},geometry:{type:"LineString",coordinates:[[a,b],[a+.08*rn(),b-.1*rn()]]}})}addLayer("Red vial",{features:v},1)}
 let pend=null;const msg=t=>$("ms").textContent=t;
-async function load(files,cfg){let n=0;$("busy").style.display="block";$("busy").textContent="Leyendo archivos…";await new Promise(z=>setTimeout(z));for(const f of files){if(!/\.(geo)?json$/i.test(f.name))continue;try{const c=layers.length;addLayer(f.name.replace(/\.\w+$/,""),JSON.parse(await f.text()));if(layers.length>c){n++;const l=layers[layers.length-1];l.id=Date.now()+"_"+Math.random().toString(36).slice(2);const old=layers.filter(x=>x!==l&&x.name===l.name&&!x.demo);old.forEach(x=>{if(x.id)dbDel(x.id)});layers=layers.filter(x=>!old.includes(x));if(cfg&&cfg.role){l.role=cfg.role;if(cfg.ent){l.ent=cfg.ent;l.comp=cfg.comp;scn=l.name}}dbPut(l)}}catch(e){}}
+async function load(files,cfg){let n=0;NOTES=[];$("busy").style.display="block";$("busy").textContent="Leyendo archivos…";await new Promise(z=>setTimeout(z));for(const f of files){if(!/\.(geo)?json$/i.test(f.name))continue;try{const c=layers.length;addLayer(f.name.replace(/\.\w+$/,""),JSON.parse(await f.text()));if(layers.length>c){n++;const l=layers[layers.length-1];l.id=Date.now()+"_"+Math.random().toString(36).slice(2);const old=layers.filter(x=>x!==l&&x.name===l.name&&!x.demo);old.forEach(x=>{if(x.id)dbDel(x.id)});layers=layers.filter(x=>!old.includes(x));if(cfg&&cfg.role){l.role=cfg.role;if(cfg.ent){l.ent=cfg.ent;l.comp=cfg.comp;scn=l.name}}if(l.role=="expuesto")NOTES.push(dn(l.name)+" → "+getResp(l));dbPut(l)}}catch(e){}}
  if(n)layers=layers.filter(l=>!l.demo);await rebuild();msg(n?"✓ "+n+" capa(s) cargada(s). Ve a «Mapa y análisis».":"✗ No se cargó ninguna capa (¿es GeoJSON?)")}
 document.querySelectorAll("[data-ld]").forEach(b=>b.onclick=()=>{pend=b.dataset;$("fx").value="";$("fx").click()});$("fx").onchange=e=>load(e.target.files,pend);
 $("ob").onclick=()=>{pend={role:"riesgo",ent:$("oe").value.trim()||"Otra",comp:$("oc").value.trim()||"Escenario"};$("fx").value="";$("fx").click()};
@@ -269,7 +272,7 @@ $("cl").onclick=()=>{layers=[];dbClear();rebuild()};$("dm").onclick=()=>{demo();
 
 $("sd").onchange=e=>{sel={d:e.target.value,p:"",s:""};hl=null;render()};$("sp").onchange=e=>{sel.p=e.target.value;sel.s="";hl=null;render()};$("ss").onchange=e=>{sel.s=e.target.value;hl=null;render()};
 $("rs").onclick=()=>{sel={d:"",p:"",s:""};open=null;hl=null;const r=layers.find(l=>l.role=="riesgo");scn=r?r.name:"";render()};
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x==b));["a","b","c"].forEach(i=>$(i).classList.toggle("hide",i!=b.dataset.t));$("bar").classList.toggle("hide",b.dataset.t=="c");setH()});
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x==b));["a","c"].forEach(i=>$(i).classList.toggle("hide",i!=b.dataset.t));$("bar").classList.toggle("hide",b.dataset.t=="c");setH()});
 const mp=$("map");let dr=null,tm=null;const pk=e=>{const r=mp.getBoundingClientRect();return[(e.clientX-r.left)*MW/r.width,(e.clientY-r.top)*MH/r.height]};
 const ap=()=>{const g=$("vp");if(g)g.setAttribute("transform",`translate(${tf.x} ${tf.y}) scale(${tf.k})`)};
 const cm=()=>{clearTimeout(tm);if(!V||(tf.k==1&&!tf.x&&!tf.y))return;const s=TW*2**V.z,k=tf.k;V.cx+=((MW/2-tf.x)/k-MW/2)/s;V.cy+=((MH/2-tf.y)/k-MH/2)/s;V.z=Math.max(1,Math.min(19,V.z+Math.log2(k)));drawMap(lastIt,lastSc,false)};
@@ -279,21 +282,20 @@ mp.onpointermove=e=>{if(!dr||!V)return;const p=pk(e);tf.x+=p[0]-dr[0];tf.y+=p[1]
 mp.onwheel=e=>{e.preventDefault();dz(e.deltaY<0?1.41:.71,pk(e))};
 $("zi").onclick=()=>dz(2);$("zo").onclick=()=>dz(.5);$("zh").onclick=()=>drawMap(lastIt,lastSc,true);$("bm").onchange=()=>drawMap(lastIt,lastSc,false);$("rk").onclick=()=>{showRisk=!showRisk;$("rk").textContent="👁 Mapa de riesgo: "+(showRisk?"ON":"OFF");drawMap(lastIt,lastSc,false)};$("dx").onclick=()=>{open=null;hl=null;keep=true;render();if(open)$("dt").scrollIntoView({behavior:"smooth",block:"nearest"})};
 $("ps").oninput=()=>{psz=+$("ps").value;drawMap(lastIt,lastSc,false)};
-$("exc").onclick=()=>{if(!EXCSV)return;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([EXCSV],{type:"text/csv;charset=utf-8"}));a.download="prioridad_intervencion.csv";a.click()};
 demo();build();panel();
 setH();addEventListener("resize",()=>{setH()});if(window.ResizeObserver)new ResizeObserver(()=>{const first=!FIT;if(fitMap()){FIT=true;if(lastIt)drawMap(lastIt,lastSc,first)}}).observe($("mapbox"));
 const LECT=new URLSearchParams(location.search).get("modo")=="lectura";
 const toast=(t,ms)=>{const z=$("busy");z.style.display="block";z.textContent=t;if(ms)setTimeout(()=>z.style.display="none",ms)};
 const pm=t=>$("pms").textContent=t,nap=()=>new Promise(z=>setTimeout(z));
 $("psv").onclick=async()=>{try{const L=layers.filter(l=>!l.demo);if(!L.length)return pm("✗ No hay capas reales cargadas");toast("Comprimiendo proyecto…");await nap();
- const js=JSON.stringify({app:"riesgos-cajamarca",v:1,fecha:new Date().toISOString(),layers:L.map(l=>({name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns,fc:{type:"FeatureCollection",features:l.fc.features.map(f=>({type:"Feature",properties:f.properties,geometry:f.geometry}))}}))});
+ const js=JSON.stringify({app:"riesgos-cajamarca",v:1,fecha:new Date().toISOString(),layers:L.map(l=>({name:l.name,role:l.role,ent:l.ent,comp:l.comp,lab:l.lab,lf:l.lf,ns:l.ns,resp:l.resp,disp:l.disp,fc:{type:"FeatureCollection",features:l.fc.features.map(f=>({type:"Feature",properties:f.properties,geometry:f.geometry}))}}))});
  let blob;try{blob=await new Response(new Blob([js]).stream().pipeThrough(new CompressionStream("gzip"))).blob()}catch(e){blob=new Blob([js])}
  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="proyecto_riesgos.riesgos";a.click();pm("✓ Proyecto guardado: "+L.length+" capa(s), "+(blob.size/1e6).toFixed(1)+" MB. Envía ese archivo.")}catch(e){pm("✗ "+e.message)}finally{$("busy").style.display="none"}};
 $("pop").onclick=()=>{$("pfi").value="";$("pfi").click()};
 $("pfi").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{toast("Leyendo proyecto…");await nap();const h=new Uint8Array(await f.slice(0,2).arrayBuffer());
  const txt=h[0]==0x1f&&h[1]==0x8b?await new Response(f.stream().pipeThrough(new DecompressionStream("gzip"))).text():await f.text();
  const P=JSON.parse(txt);if(!P||P.app!=="riesgos-cajamarca"||!Array.isArray(P.layers))throw new Error("El archivo no es un proyecto de este dashboard");if(!P.layers.length)throw new Error("El proyecto no tiene capas");
- await dbClear();layers=[];for(const x of P.layers){toast("Cargando «"+x.name+"»…");await nap();const c=layers.length;addLayer(x.name,x.fc);if(layers.length>c){const l=layers[layers.length-1];l.id=Date.now()+"_"+Math.random().toString(36).slice(2);l.role=x.role;l.ent=x.ent;l.comp=x.comp;if(x.lab)l.lab=x.lab;if(x.lf)l.lf=x.lf;if(x.ns)l.ns=+x.ns;await dbPut(l)}}
+ await dbClear();layers=[];for(const x of P.layers){toast("Cargando «"+x.name+"»…");await nap();const c=layers.length;addLayer(x.name,x.fc);if(layers.length>c){const l=layers[layers.length-1];l.id=Date.now()+"_"+Math.random().toString(36).slice(2);l.role=x.role;l.ent=x.ent;l.comp=x.comp;if(x.lab)l.lab=x.lab;if(x.lf)l.lf=x.lf;if(x.ns)l.ns=+x.ns;if(x.resp!=null)l.resp=x.resp;if(x.disp)l.disp=x.disp;await dbPut(l)}}
  await rebuild();pm("✓ Proyecto abierto: "+layers.length+" capa(s). Ve a «Mapa y análisis».")}catch(err){pm("✗ "+err.message);$("busy").style.display="none"}};
 const boot=async()=>{if(LECT)document.querySelector('.tab[data-t="c"]').classList.add("hide");let crash=false;try{crash=localStorage.getItem("boot")=="1";localStorage.setItem("boot","1")}catch(e){}
  const done=()=>{try{localStorage.removeItem("boot")}catch(e){}};
